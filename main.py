@@ -51,12 +51,12 @@ class HARSIStrategy(Strategy):
         def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
             min_val = min(ha_low[-self.window:])
             max_val = max(ha_high[-self.window:])
-            scale = 60.0 / (max_val - min_val) if max_val != min_val else 1
+            scale = 1.0 / (max_val - min_val) if max_val != min_val else 1
             
-            ha_open_scaled = (ha_open - min_val) * scale + self.bottom
-            ha_close_scaled = (ha_close - min_val) * scale + self.bottom
-            ha_high_scaled = (ha_high - min_val) * scale + self.bottom
-            ha_low_scaled = (ha_low - min_val) * scale + self.bottom
+            ha_open_scaled = (ha_open - min_val) * scale
+            ha_close_scaled = (ha_close - min_val) * scale
+            ha_high_scaled = (ha_high - min_val) * scale
+            ha_low_scaled = (ha_low - min_val) * scale
             
             return ha_open_scaled, ha_close_scaled, ha_high_scaled, ha_low_scaled
         
@@ -65,26 +65,30 @@ class HARSIStrategy(Strategy):
         )
         
         # Calculate RSI and Stochastic RSI
-        def calc_rsi(close):
+        # Alternative vectorized version (more efficient)
+        def calc_rsi(close, period=14):
+            """
+            Vectorized RSI calculation - more efficient for large datasets
+            """
+            close = np.array(close, dtype=float)
             delta = np.diff(close)
-            gain = (delta > 0) * delta
-            loss = (delta < 0) * -delta
             
-            avg_gain = np.zeros_like(close)
-            avg_loss = np.zeros_like(close)
+            gain = np.where(delta > 0, delta, 0)
+            loss = np.where(delta < 0, -delta, 0)
             
-            # Initialize first values
-            avg_gain[0] = np.mean(gain[:self.length_rsi])
-            avg_loss[0] = np.mean(loss[:self.length_rsi])
+            # Use pandas-style exponential weighted mean if available
+            gain_ema = pd.Series(gain).ewm(span=period, adjust=False).mean()
+            loss_ema = pd.Series(loss).ewm(span=period, adjust=False).mean()
             
-            # Calculate RSI
-            for i in range(1, len(close)):
-                avg_gain[i] = (avg_gain[i-1] * (self.length_rsi - 1) + gain[i-1]) / self.length_rsi
-                avg_loss[i] = (avg_loss[i-1] * (self.length_rsi - 1) + loss[i-1]) / self.length_rsi
-                rs = avg_gain[i] / avg_loss[i] if avg_loss[i] != 0 else 0
-                close[i] = 100 - (100 / (1 + rs))
+            rs = gain_ema / loss_ema
+            rsi_values = 100 - (100 / (1 + rs))
             
-            return close
+            # Pad with NaN for first value and return
+            rsi = np.full(len(close), np.nan)
+            rsi[1:] = rsi_values
+            rsi[:period] = np.nan  # First 'period' values should be NaN
+            
+            return rsi
         
         rsi = self.I(calc_rsi, self.data.Close.copy())
         
