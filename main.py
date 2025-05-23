@@ -103,7 +103,7 @@ class HARSIStrategy(Strategy):
                     stoch_rsi[i] = (rsi[i] - rsi_min) / (rsi_max - rsi_min) if rsi_max != rsi_min else 0
             return stoch_rsi
         
-        stoch_rsi = self.I(calc_stoch_rsi, rsi)
+        self.stoch_rsi = self.I(calc_stoch_rsi, rsi)
         
         # Calculate K and D lines
         def calc_k(stoch_rsi):
@@ -124,7 +124,7 @@ class HARSIStrategy(Strategy):
                     d[i] = np.mean(k[i-self.smooth_d+1:i+1])
             return d
         
-        self.k = self.I(calc_k, stoch_rsi)
+        self.k = self.I(calc_k, self.stoch_rsi)
         self.d = self.I(calc_d, self.k)
         
         # Rescale K and D from [0, 1] to [-40, 40]
@@ -132,15 +132,19 @@ class HARSIStrategy(Strategy):
         self.d_scaled = self.I(lambda d: d * 80 - 40, self.d)
 
     def next(self):
-        # Entry conditions
-        is_rising = self.k_scaled[-1] > self.k_scaled[-2]
-        cross_above_ha = crossover(self.k_scaled, self.ha_close_scaled)
-        long_condition = is_rising and cross_above_ha and is_rising
+        # Check if Heikin Ashi candle is green (uptrend) or red (downtrend)
+        ha_green = self.ha_close_scaled[-1] > self.ha_open_scaled[-1]
+        ha_red = self.ha_close_scaled[-1] < self.ha_open_scaled[-1]
         
-        # Exit conditions
-        cross_below_d = crossover(self.d_scaled, self.k_scaled)
-        above_threshold = self.k_scaled[-1] > 30 and self.d_scaled[-1] > 30
-        exit_condition = cross_below_d and above_threshold
+        # Check RSI direction
+        rsi_rising = self.stoch_rsi[-1] > self.stoch_rsi[-2]
+        rsi_falling = self.stoch_rsi[-1] < self.stoch_rsi[-2]
+        
+        # Entry condition: RSI rising AND Heikin Ashi candle is green
+        long_condition = rsi_rising and ha_green
+        
+        # Exit condition: RSI falling AND Heikin Ashi candle is red
+        exit_condition = rsi_falling and ha_red
         
         # Execute trades
         if long_condition and not self.position:
@@ -188,17 +192,16 @@ if __name__ == '__main__':
     if data is not None and not data.empty:
         print(f"Successfully fetched {len(data)} data points")
         # Run backtest
-        bt = Backtest(data, HARSIStrategy, cash=1000, commission=.002)
+        bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001)
         stats = bt.run()
         
         # Print results
         print("\nBacktest Results:")
-        print(f"Total Return: {stats['Return [%]']:.2f}%")
-        print(f"Buy & Hold Return: {stats['Buy & Hold Return [%]']:.2f}%")
-        print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
-        print(f"# Trades: {stats['# Trades']}")
-        print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
-        
+        # print(f"Total Return: {stats['Return [%]']:.2f}%")
+        # print(f"Buy & Hold Return: {stats['Buy & Hold Return [%]']:.2f}%")
+        # print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
+        # print(f"# Trades: {stats['# Trades']}")
+        # print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
         # Plot results
         bt.plot()
     else:
