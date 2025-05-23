@@ -1,0 +1,311 @@
+import pandas as pd
+import numpy as np
+from backtesting import Backtest, Strategy
+from backtesting.lib import crossover
+import yfinance as yf
+from datetime import datetime, timedelta
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import undetected_chromedriver as uc
+import logging
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('trading_bot.log'),
+        logging.StreamHandler()
+    ]
+)
+
+class HARSIStrategy(Strategy):
+    # Strategy parameters
+    bottom = -30
+    middle_low = -20
+    middle_high = 20
+    top = 30
+    length_rsi = 14
+    length_stoch = 14
+    smooth_k = 3
+    smooth_d = 3
+    max_ha_cross = 10
+    window = 100
+
+    def init(self):
+        # Calculate Heikin Ashi values
+        self.ha_close = (self.data.Open + self.data.High + self.data.Low + self.data.Close) / 4
+        self.ha_open = self.I(lambda x: x, self.data.Open)
+        self.ha_high = self.I(lambda x: x, self.data.High)
+        self.ha_low = self.I(lambda x: x, self.data.Low)
+        
+        def calc_ha_open(ha_open, ha_close):
+            ha_open[0] = self.data.Open[0]
+            for i in range(1, len(ha_open)):
+                ha_open[i] = (ha_open[i-1] + ha_close[i-1]) / 2
+            return ha_open
+        
+        def calc_ha_high(ha_high, ha_open, ha_close):
+            for i in range(len(ha_high)):
+                ha_high[i] = max(self.data.High[i], max(ha_open[i], ha_close[i]))
+            return ha_high
+        
+        def calc_ha_low(ha_low, ha_open, ha_close):
+            for i in range(len(ha_low)):
+                ha_low[i] = min(self.data.Low[i], min(ha_open[i], ha_close[i]))
+            return ha_low
+        
+        self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
+        self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
+        self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
+        
+        def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
+            min_val = min(ha_low[-self.window:])
+            max_val = max(ha_high[-self.window:])
+            scale = 1.0 / (max_val - min_val) if max_val != min_val else 1
+            
+            ha_open_scaled = (ha_open - min_val) * scale
+            ha_close_scaled = (ha_close - min_val) * scale
+            ha_high_scaled = (ha_high - min_val) * scale
+            ha_low_scaled = (ha_low - min_val) * scale
+            
+            return ha_open_scaled, ha_close_scaled, ha_high_scaled, ha_low_scaled
+        
+        self.ha_open_scaled, self.ha_close_scaled, self.ha_high_scaled, self.ha_low_scaled = self.I(
+            calc_scaled_values, self.ha_low, self.ha_high, self.ha_open, self.ha_close
+        )
+        
+        def calc_rsi(close, period=14):
+            close = np.array(close, dtype=float)
+            delta = np.diff(close)
+            
+            gain = np.where(delta > 0, delta, 0)
+            loss = np.where(delta < 0, -delta, 0)
+            
+            gain_ema = pd.Series(gain).ewm(span=period, adjust=False).mean()
+            loss_ema = pd.Series(loss).ewm(span=period, adjust=False).mean()
+            
+            rs = gain_ema / loss_ema
+            rsi_values = 100 - (100 / (1 + rs))
+            
+            rsi = np.full(len(close), np.nan)
+            rsi[1:] = rsi_values
+            rsi[:period] = np.nan
+            
+            return rsi
+        
+        rsi = self.I(calc_rsi, self.data.Close.copy())
+        
+        def calc_stoch_rsi(rsi):
+            stoch_rsi = np.zeros_like(rsi)
+            for i in range(len(rsi)):
+                if i < self.length_stoch:
+                    stoch_rsi[i] = 0
+                else:
+                    rsi_min = np.min(rsi[i-self.length_stoch+1:i+1])
+                    rsi_max = np.max(rsi[i-self.length_stoch+1:i+1])
+                    stoch_rsi[i] = (rsi[i] - rsi_min) / (rsi_max - rsi_min) if rsi_max != rsi_min else 0
+            return stoch_rsi
+        
+        self.stoch_rsi = self.I(calc_stoch_rsi, rsi)
+        
+        def calc_k(stoch_rsi):
+            k = np.zeros_like(stoch_rsi)
+            for i in range(len(stoch_rsi)):
+                if i < self.smooth_k:
+                    k[i] = np.mean(stoch_rsi[:i+1])
+                else:
+                    k[i] = np.mean(stoch_rsi[i-self.smooth_k+1:i+1])
+            return k
+        
+        def calc_d(k):
+            d = np.zeros_like(k)
+            for i in range(len(k)):
+                if i < self.smooth_d:
+                    d[i] = np.mean(k[:i+1])
+                else:
+                    d[i] = np.mean(k[i-self.smooth_d+1:i+1])
+            return d
+        
+        self.k = self.I(calc_k, self.stoch_rsi)
+        self.d = self.I(calc_d, self.k)
+        
+        self.k_scaled = self.I(lambda k: k * 80 - 40, self.k)
+        self.d_scaled = self.I(lambda d: d * 80 - 40, self.d)
+
+    def next(self):
+        ha_green = self.ha_close_scaled[-1] > self.ha_open_scaled[-1]
+        ha_red = self.ha_close_scaled[-1] < self.ha_open_scaled[-1]
+        
+        rsi_rising = self.stoch_rsi[-1] > self.stoch_rsi[-2]
+        rsi_falling = self.stoch_rsi[-1] < self.stoch_rsi[-2]
+        
+        long_condition = rsi_rising and ha_green
+        exit_condition = rsi_falling and ha_red
+        
+        if long_condition and not self.position:
+            self.buy()
+            return "BUY"
+        elif exit_condition and self.position:
+            self.position.close()
+            return "SELL"
+        return None
+
+class LiveTrader:
+    def __init__(self):
+        self.driver = uc.Chrome()
+        self.driver.get("https://www.pionex.us/")
+        self.driver.maximize_window()
+        
+        # Wait for user to sign in
+        input("Log in to Pionex, navigate to the trading panel, and then press Enter to continue...")
+        
+        self.symbol = 'XRP-USD'
+        self.interval = '15m'
+        self.last_action = None
+        self.last_check_time = None
+        
+    def buy(self):
+        logging.info("Placing Buy Order...")
+        buy_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Buy']"))
+        )
+        buy_button.click()
+        market_tab = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
+        )
+        market_tab.click()
+        
+        balance_span = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((
+                By.XPATH, "//span[text()='Available balance:']/following-sibling::span"
+            ))
+        )
+
+        # Extract and clean balance value
+        balance_text = balance_span.text.strip().replace("USD", "").replace(",", "")
+        balance_value = float(balance_text)
+
+        # Calculate amount
+        # amount = balance_value * BUY_PERCENTAGE
+        amount = 20
+        
+        input_box = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
+        )
+        input_box.clear()
+        input_box.send_keys(str(amount))
+        
+        buy_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Buy XRP']]"))
+        )
+        buy_button.click()
+        logging.info(f"Buy Order Placed: Bought ${amount} of XRP")
+
+    def sell(self):
+        logging.info("Placing Sell Order...")
+        sell_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Sell']"))
+        )
+        sell_button.click()
+        market_tab = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
+        )
+        market_tab.click()
+        
+        balance_span = WebDriverWait(self.driver, 10).until(
+            EC.visibility_of_element_located((
+                By.XPATH, "//span[text()='Available balance:']/following-sibling::span[contains(text(), 'XRP')]"
+            ))
+        )
+
+        balance_text = balance_span.text.strip()
+        balance_number = balance_text.replace("XRP", "").replace(",", "").strip()
+        balance_value = float(balance_number)
+        
+        input_box = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
+        )
+        input_box.clear()
+        input_box.send_keys(str(balance_value))
+        
+        sell_button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Sell XRP']]"))
+        )
+        sell_button.click()
+        logging.info(f"Sell Order Placed: Sold {balance_value} XRP")
+
+    def fetch_live_data(self):
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=1)  # Get last 24 hours of data
+        
+        try:
+            ticker = yf.Ticker(self.symbol)
+            data = ticker.history(start=start_date, end=end_date, interval=self.interval)
+            if not data.empty:
+                return data
+        except Exception as e:
+            logging.error(f"Error fetching data: {str(e)}")
+        return None
+
+    def run(self):
+        logging.info("Starting live trading bot...")
+        while True:
+            try:
+                # Get current time
+                current_time = datetime.now()
+                
+                # Calculate time until next 15-minute candle open
+                minutes_to_next = 15 - (current_time.minute % 15)
+                seconds_to_next = minutes_to_next * 60 - current_time.second
+                
+                if seconds_to_next > 0:
+                    logging.info(f"Waiting {seconds_to_next} seconds for next candle open...")
+                    time.sleep(seconds_to_next + 2)
+                
+                # Fetch latest data
+                data = self.fetch_live_data()
+                if data is None or data.empty:
+                    logging.warning("Failed to fetch data, retrying in 5 seconds...")
+                    time.sleep(5)
+                    continue
+                
+                # Run strategy
+                bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
+                stats = bt.run()
+                
+                # Get the last action from the strategy
+                last_action = stats['_strategy'].last_action
+                
+                # Execute trades if needed
+                if last_action == "BUY" and self.last_action != "BUY":
+                    logging.info("Buy signal detected")
+                    self.buy()
+                    self.last_action = "BUY"
+                elif last_action == "SELL" and self.last_action != "SELL":
+                    logging.info("Sell signal detected")
+                    self.sell()
+                    self.last_action = "SELL"
+                
+                logging.info(f"Strategy check completed at {current_time}")
+                
+            except Exception as e:
+                logging.error(f"Error in main loop: {str(e)}")
+                time.sleep(5)  # Wait 5 seconds before retrying
+
+    def cleanup(self):
+        logging.info("Cleaning up and closing browser...")
+        self.driver.quit()
+
+if __name__ == "__main__":
+    trader = LiveTrader()
+    try:
+        trader.run()
+    except KeyboardInterrupt:
+        logging.info("\nShutting down trading bot...")
+    finally:
+        trader.cleanup() 

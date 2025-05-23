@@ -202,7 +202,7 @@ if __name__ == '__main__':
         # print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
         # print(f"# Trades: {stats['# Trades']}")
         # print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
-        # Plot results
+        print(stats)
         bt.plot()
     else:
         print("Failed to fetch data. Please try again later.")
