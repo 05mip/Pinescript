@@ -12,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 import logging
+import pytz
 
 # Configure logging
 logging.basicConfig(
@@ -35,6 +36,7 @@ class HARSIStrategy(Strategy):
     smooth_d = 3
     max_ha_cross = 10
     window = 100
+    last_action = None
 
     def init(self):
         # Calculate Heikin Ashi values
@@ -149,9 +151,11 @@ class HARSIStrategy(Strategy):
         
         if long_condition and not self.position:
             self.buy()
+            self.last_action = "BUY"
             return "BUY"
         elif exit_condition and self.position:
             self.position.close()
+            self.last_action = "SELL"
             return "SELL"
         return None
 
@@ -171,6 +175,15 @@ class LiveTrader:
         
     def buy(self):
         logging.info("Placing Buy Order...")
+        
+        # Get the latest price from the most recent data
+        latest_data = self.fetch_live_data()
+        if latest_data is not None and not latest_data.empty:
+            current_price = latest_data['Close'].iloc[-1]
+            logging.info(f"Current XRP price (from fetched): ${current_price:.4f}")
+        else:
+            logging.warning("Could not fetch current price")
+        
         buy_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Buy']"))
         )
@@ -180,7 +193,7 @@ class LiveTrader:
         )
         market_tab.click()
         
-        balance_span = WebDriverWait(driver, 10).until(
+        balance_span = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((
                 By.XPATH, "//span[text()='Available balance:']/following-sibling::span"
             ))
@@ -194,7 +207,7 @@ class LiveTrader:
         # amount = balance_value * BUY_PERCENTAGE
         amount = 20
         
-        input_box = WebDriverWait(driver, 10).until(
+        input_box = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
         )
         input_box.clear()
@@ -204,10 +217,19 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Buy XRP']]"))
         )
         buy_button.click()
-        logging.info(f"Buy Order Placed: Bought ${amount} of XRP")
+        logging.info(f"Buy Order Placed: Bought ${amount} of XRP at approximately ${current_price:.4f} per XRP")
 
     def sell(self):
         logging.info("Placing Sell Order...")
+        
+        # Get the latest price from the most recent data
+        latest_data = self.fetch_live_data()
+        if latest_data is not None and not latest_data.empty:
+            current_price = latest_data['Close'].iloc[-1]
+            logging.info(f"Current XRP price (from fetched): ${current_price:.4f}")
+        else:
+            logging.warning("Could not fetch current price")
+            
         sell_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Sell']"))
         )
@@ -237,16 +259,18 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Sell XRP']]"))
         )
         sell_button.click()
-        logging.info(f"Sell Order Placed: Sold {balance_value} XRP")
+        logging.info(f"Sell Order Placed: Sold {balance_value} XRP at approximately ${current_price:.4f} per XRP")
 
     def fetch_live_data(self):
-        end_date = datetime.now()
+        end_date = datetime.now(pytz.UTC)  # Get current time in UTC
         start_date = end_date - timedelta(days=1)  # Get last 24 hours of data
         
         try:
             ticker = yf.Ticker(self.symbol)
             data = ticker.history(start=start_date, end=end_date, interval=self.interval)
             if not data.empty:
+                # Convert index from UTC to PST
+                data.index = data.index.tz_convert('America/Los_Angeles')
                 return data
         except Exception as e:
             logging.error(f"Error fetching data: {str(e)}")

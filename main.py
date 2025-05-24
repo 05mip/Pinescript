@@ -5,6 +5,7 @@ from backtesting.lib import crossover
 import yfinance as yf
 from datetime import datetime, timedelta
 import time
+import pytz
 
 class HARSIStrategy(Strategy):
     # Strategy parameters
@@ -163,11 +164,19 @@ def fetch_data(symbol, start_date, end_date, interval='15m', max_retries=3, dela
     :param delay: Delay between retries in seconds
     :return: DataFrame with OHLC data
     """
+    # Convert dates to UTC if they're not already
+    if isinstance(start_date, datetime):
+        start_date = start_date.astimezone(pytz.UTC)
+    if isinstance(end_date, datetime):
+        end_date = end_date.astimezone(pytz.UTC)
+    
     for attempt in range(max_retries):
         try:
             ticker = yf.Ticker(symbol)
             data = ticker.history(start=start_date, end=end_date, interval=interval)
             if not data.empty:
+                # Convert index from UTC to PST
+                data.index = data.index.tz_convert('America/Los_Angeles')
                 return data
             print(f"Attempt {attempt + 1}: No data received, retrying...")
         except Exception as e:
