@@ -13,6 +13,8 @@ from selenium.webdriver.support import expected_conditions as EC
 import undetected_chromedriver as uc
 import logging
 import pytz
+import os
+import pickle
 
 # Configure logging
 logging.basicConfig(
@@ -161,18 +163,77 @@ class HARSIStrategy(Strategy):
 
 class LiveTrader:
     def __init__(self):
-        self.driver = uc.Chrome()
-        self.driver.get("https://www.pionex.us/")
-        self.driver.maximize_window()
-        
-        # Wait for user to sign in
-        input("Log in to Pionex, navigate to the trading panel, and then press Enter to continue...")
-        
+        self.cookies_file = 'pionex_cookies.pkl'
+        self.driver = None
         self.symbol = 'XRP-USD'
         self.interval = '15m'
         self.last_action = None
         self.last_check_time = None
         
+    def setup_driver(self):
+        """Initialize the Chrome driver with saved cookies if available"""
+        # Create chrome profile directory in the user's home directory
+        chrome_profile_dir = os.path.join(os.path.expanduser('~'), 'pionex_chrome_profile')
+        os.makedirs(chrome_profile_dir, exist_ok=True)
+        
+        # Add more Chrome options for stability
+        options = uc.ChromeOptions()
+        options.add_argument(f'--user-data-dir={chrome_profile_dir}')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--disable-software-rasterizer')
+        
+        try:
+            self.driver = uc.Chrome(options=options)
+            self.driver.get("https://www.pionex.us/")
+            self.driver.maximize_window()
+            
+            # Try to load cookies if they exist
+            if os.path.exists(self.cookies_file):
+                try:
+                    cookies = pickle.load(open(self.cookies_file, "rb"))
+                    for cookie in cookies:
+                        self.driver.add_cookie(cookie)
+                    self.driver.refresh()
+                    logging.info("Loaded saved cookies")
+                    self.driver.get("https://www.pionex.us/en-US/trade/XRP_USD/Manual")
+                    # Wait a bit to see if we're actually logged in
+                    time.sleep(3)
+                    
+                    # Check if we're logged in by looking for elements that are only visible when logged in
+                    try:
+                        WebDriverWait(self.driver, 5).until(
+                            EC.presence_of_element_located((By.XPATH, "//div[@role='tab' and text()='Buy']"))
+                        )
+                        logging.info("Successfully logged in using saved cookies")
+                        return
+                    except:
+                        logging.info("Saved cookies expired or invalid, need to log in manually")
+                except Exception as e:
+                    logging.error(f"Error loading cookies: {str(e)}")
+            
+            # If we get here, we need to log in manually
+            input("Log in to Pionex, navigate to the trading panel, and then press Enter to continue...")
+            
+            # Save cookies after successful login
+            try:
+                cookies = self.driver.get_cookies()
+                pickle.dump(cookies, open(self.cookies_file, "wb"))
+                logging.info("Saved new cookies")
+            except Exception as e:
+                logging.error(f"Error saving cookies: {str(e)}")
+                
+        except Exception as e:
+            logging.error(f"Failed to initialize Chrome driver: {str(e)}")
+            if self.driver:
+                try:
+                    self.driver.quit()
+                except:
+                    pass
+            raise Exception("Failed to initialize Chrome. Please make sure Chrome is installed and not running in the background.")
+
     def buy(self):
         logging.info("Placing Buy Order...")
         
@@ -217,6 +278,17 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Buy XRP']]"))
         )
         buy_button.click()
+        
+        # Check for and handle confirmation dialog
+        try:
+            confirm_button = WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
+            )
+            confirm_button.click()
+            logging.info("Confirmed buy order in dialog")
+        except:
+            logging.info("No confirmation dialog appeared")
+            
         logging.info(f"Buy Order Placed: Bought ${amount} of XRP at approximately ${current_price:.4f} per XRP")
 
     def sell(self):
@@ -259,6 +331,17 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Sell XRP']]"))
         )
         sell_button.click()
+        
+        # Check for and handle confirmation dialog
+        try:
+            confirm_button = WebDriverWait(self.driver, 5).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
+            )
+            confirm_button.click()
+            logging.info("Confirmed sell order in dialog")
+        except:
+            logging.info("No confirmation dialog appeared")
+            
         logging.info(f"Sell Order Placed: Sold {balance_value} XRP at approximately ${current_price:.4f} per XRP")
 
     def fetch_live_data(self):
@@ -278,6 +361,8 @@ class LiveTrader:
 
     def run(self):
         logging.info("Starting live trading bot...")
+        self.setup_driver()  # Initialize driver with cookies
+        
         while True:
             try:
                 # Get current time
@@ -301,6 +386,7 @@ class LiveTrader:
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
                 stats = bt.run()
+                bt.plot()
                 
                 # Get the last action from the strategy
                 last_action = stats['_strategy'].last_action
@@ -323,7 +409,8 @@ class LiveTrader:
 
     def cleanup(self):
         logging.info("Cleaning up and closing browser...")
-        self.driver.quit()
+        if self.driver:
+            self.driver.quit()
 
 if __name__ == "__main__":
     trader = LiveTrader()

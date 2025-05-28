@@ -6,6 +6,7 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import time
 import pytz
+import requests
 
 class HARSIStrategy(Strategy):
     # Strategy parameters
@@ -188,15 +189,55 @@ def fetch_data(symbol, start_date, end_date, interval='15m', max_retries=3, dela
                 raise Exception(f"Failed to fetch data after {max_retries} attempts")
     return None
 
+def fetch_data_from_pionex(symbol="XRP_USDT", interval="15M", limit=500):
+    url = "https://api.pionex.com/api/v1/market/klines"
+    params = {
+        "symbol": symbol,
+        "interval": interval,
+        "limit": limit
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        if not data.get("result"):
+            print("API returned an error:", data)
+            return None
+
+        klines = data["data"]["klines"]
+        df = pd.DataFrame(klines)
+        df["timestamp"] = pd.to_datetime(df["time"], unit='ms', utc=True)
+        df.set_index("timestamp", inplace=True)
+
+        df = df.rename(columns={
+            "open": "Open",
+            "high": "High",
+            "low": "Low",
+            "close": "Close",
+            "volume": "Volume"
+        })
+
+        # Convert all columns to numeric types
+        df = df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
+
+        return df
+
+    except Exception as e:
+        print("Error fetching Pionex data:", e)
+        return None
+
 if __name__ == '__main__':
     # Example usage with yfinance
     symbol = 'XRP-USD'
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=59)  # 59 days of data
+    start_date = end_date - timedelta(days=5)  # 59 days of data
     
     print(f"Fetching data for {symbol}...")
     # Fetch data with retry mechanism
     data = fetch_data(symbol, start_date, end_date)
+    # data = fetch_data_from_pionex(symbol)
     
     if data is not None and not data.empty:
         print(f"Successfully fetched {len(data)} data points")
@@ -206,12 +247,20 @@ if __name__ == '__main__':
         
         # Print results
         print("\nBacktest Results:")
-        # print(f"Total Return: {stats['Return [%]']:.2f}%")
-        # print(f"Buy & Hold Return: {stats['Buy & Hold Return [%]']:.2f}%")
-        # print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
-        # print(f"# Trades: {stats['# Trades']}")
-        # print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
-        print(stats)
+        print(f"Total Return: {stats['Return [%]']:.2f}%")
+        print(f"Buy & Hold Return: {stats['Buy & Hold Return [%]']:.2f}%")
+        print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
+        print(f"# Trades: {stats['# Trades']}")
+        print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
+        
+        # data.to_csv('data.csv')
+
+        # # Export last 30 trades to CSV
+        # last_30_trades = stats['_trades'].tail(30)
+        # csv_filename = f'trades_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+        # last_30_trades.to_csv(csv_filename)
+        # print(f"\nExported last 30 trades to {csv_filename}")
+        
         bt.plot()
     else:
         print("Failed to fetch data. Please try again later.")
