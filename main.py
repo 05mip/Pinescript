@@ -230,14 +230,14 @@ def fetch_data_from_pionex(symbol="XRP_USDT", interval="15M", limit=500):
 
 if __name__ == '__main__':
     # Example usage with yfinance
-    symbol = 'XRP-USD'
+    symbol = 'XRP_USDT'
     end_date = datetime.now()
     start_date = end_date - timedelta(days=5)  # 59 days of data
     
     print(f"Fetching data for {symbol}...")
     # Fetch data with retry mechanism
-    data = fetch_data(symbol, start_date, end_date)
-    # data = fetch_data_from_pionex(symbol)
+    # data = fetch_data(symbol, start_date, end_date)
+    data = fetch_data_from_pionex(symbol)
     
     if data is not None and not data.empty:
         print(f"Successfully fetched {len(data)} data points")
