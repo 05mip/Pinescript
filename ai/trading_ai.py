@@ -45,7 +45,8 @@ class TradingEnvironment(gym.Env):
                  take_profit_reward=10,
                  excessive_trade_base_penalty=50,
                  high_win_rate_bonus=10,
-                 win_rate_window=10):
+                 win_rate_window=10,
+                 holding_reward_multiplier=5):
         super().__init__()
         
         # Reward parameters
@@ -55,6 +56,7 @@ class TradingEnvironment(gym.Env):
         self.excessive_trade_base_penalty = excessive_trade_base_penalty
         self.high_win_rate_bonus = high_win_rate_bonus
         self.win_rate_window = win_rate_window
+        self.holding_reward_multiplier = holding_reward_multiplier
         
         # Trade tracking
         self.closed_trades = []  # List to track closed trades
@@ -80,13 +82,19 @@ class TradingEnvironment(gym.Env):
         
         self.initial_balance = initial_balance
         self.transaction_fee = transaction_fee
-        self.min_trade_interval = 12  # Minimum 3 hours between trades (12 * 15min)
+        self.min_trade_interval = 24  # Increased from 12 to 24 (6 hours between trades)
         self.max_position_size = 0.5  # Maximum 50% of portfolio in one position
         self.stop_loss_pct = 0.02  # 2% stop loss
         self.take_profit_pct = 0.03  # 3% take profit
-        self.max_daily_trades = 6  # Maximum trades per day
+        self.max_daily_trades = 4  # Reduced from 6 to 4 trades per day
         self.daily_trades = 0  # Counter for trades in current day
         self.current_day = None  # Track current day for trade counting
+        
+        # New trading restrictions
+        self.min_hold_period = 12  # Minimum 3 hours holding period
+        self.last_trade_profit = 0  # Track last trade's profit
+        self.loss_cooldown = 0  # Cooldown period after losses
+        self.min_profit_threshold = 0.005  # 0.5% minimum profit target
         
         # Define action space (0: hold, 1: buy, 2: sell)
         self.action_space = spaces.Discrete(3)
@@ -185,6 +193,11 @@ class TradingEnvironment(gym.Env):
         # Check if enough time has passed since last trade
         can_trade = (self.current_step - self.last_trade_step) >= self.min_trade_interval
         
+        # Check if we're in cooldown period after a loss
+        if self.loss_cooldown > 0:
+            self.loss_cooldown -= 1
+            can_trade = False
+        
         # Check stop loss and take profit if in position
         if self.position > 0:
             price_change = (current_price - self.entry_price) / self.entry_price
@@ -193,13 +206,12 @@ class TradingEnvironment(gym.Env):
             if price_change <= -self.stop_loss_pct:
                 action = 2  # Force sell
                 sl_triggered = True
-                # print(f"Stop loss triggered at step {self.current_step}")
+                self.loss_cooldown = 12  # 3-hour cooldown after loss
             
             # Take profit
             elif price_change >= self.take_profit_pct:
                 action = 2  # Force sell
                 tp_triggered = True
-                # print(f"Take profit triggered at step {self.current_step}")
         
         # Execute action
         trade_executed = False
@@ -230,11 +242,16 @@ class TradingEnvironment(gym.Env):
                         
         elif action == 2 and can_trade:  # Sell
             if self.position > 0:  # Only sell if holding position
+                # Check minimum holding period
+                if (self.current_step - self.last_trade_step) < self.min_hold_period:
+                    return self._get_observation(), -1.0, False, False, {}  # Penalty for early selling
+                
                 shares_to_sell = self.position
                 revenue = shares_to_sell * current_price * (1 - self.transaction_fee)
                 
                 # Calculate trade profit
                 trade_profit = revenue - (shares_to_sell * self.entry_price * (1 + self.transaction_fee))
+                self.last_trade_profit = trade_profit
                 
                 # Record closed trade
                 self.closed_trades.append({
@@ -253,14 +270,15 @@ class TradingEnvironment(gym.Env):
                 self.last_trade_step = self.current_step
                 self.daily_trades += 1
                 trade_executed = True
+                
+                # Set cooldown if loss
+                if trade_profit < 0:
+                    self.loss_cooldown = 12  # 3-hour cooldown after loss
         
         # Calculate total value and returns
         position_value = self.position * current_price
         self.total_value = self.balance + position_value
         self.returns = (self.total_value - self.initial_balance) / self.initial_balance
-        
-        ##########################################################################################
-        ##########################################################################################
         
         # Calculate reward - improved version
         reward = 0.0
@@ -268,19 +286,30 @@ class TradingEnvironment(gym.Env):
         if previous_value > 0:
             # Portfolio change reward
             portfolio_change = (self.total_value - previous_value) / previous_value
-            reward += portfolio_change * self.portfolio_change_multiplier  # Use configurable multiplier
+            reward += portfolio_change * self.portfolio_change_multiplier
+            
+            # Transaction cost penalty
+            if trade_executed:
+                transaction_cost = abs(self.position * current_price * self.transaction_fee)
+                reward -= transaction_cost * 10  # Penalize transaction costs
             
             # Add exponential penalty for excessive trading
             if self.daily_trades > self.max_daily_trades:
                 excess_trades = self.daily_trades - self.max_daily_trades
-                penalty = self.excessive_trade_base_penalty ** excess_trades  # Use configurable base penalty
+                penalty = self.excessive_trade_base_penalty ** excess_trades
                 reward -= penalty
                 print(f"Excessive trading penalty: -{penalty:.2f} (Daily trades: {self.daily_trades})")
+            
+            # Reward holding profitable positions
+            if self.position > 0:
+                unrealized_profit = (current_price - self.entry_price) / self.entry_price
+                if unrealized_profit > 0:
+                    reward += unrealized_profit * self.holding_reward_multiplier
         
         if sl_triggered:
-            reward -= self.stop_loss_penalty  # Use configurable stop loss penalty
+            reward -= self.stop_loss_penalty
         if tp_triggered:
-            reward += self.take_profit_reward  # Use configurable take profit reward
+            reward += self.take_profit_reward
 
         # Add win rate based rewards/penalties
         if len(self.closed_trades) >= self.win_rate_window:
@@ -291,8 +320,6 @@ class TradingEnvironment(gym.Env):
         else:
             # Small positive reward for early trades to encourage exploration
             reward += 0.5
-        ##########################################################################################
-        ##########################################################################################
             
         # Move to next step
         self.current_step += 1
@@ -307,7 +334,6 @@ class TradingEnvironment(gym.Env):
             'daily_trades': self.daily_trades
         }
         
-        # Return 5 values as required by Gymnasium: observation, reward, terminated, truncated, info
         return self._get_observation(), reward, done, False, info
 
 def fetch_data(symbol='XRP-USD', period='max', interval='15m'):
