@@ -99,6 +99,15 @@ def backtest(model, start_date, end_date=None, initial_balance=10000):
     print(f"Final Portfolio Value: ${portfolio_values[-1]:.2f}")
     print(f"Initial Portfolio Value: ${portfolio_values[0]:.2f}")
     
+    # Add trade statistics
+    buy_trades = sum(1 for action in actions if action == 1)
+    sell_trades = sum(1 for action in actions if action == 2)
+    print(f"\nTrade Statistics:")
+    print(f"Total Number of Trades: {buy_trades + sell_trades}")
+    print(f"Buy Trades: {buy_trades}")
+    print(f"Sell Trades: {sell_trades}")
+    print(f"Average Trades per Day: {(buy_trades + sell_trades) / ((df.index[-1] - df.index[0]).days + 1):.2f}")
+    
     return {
         'total_return': total_return,
         'sharpe_ratio': sharpe_ratio,

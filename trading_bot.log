@@ -407,3 +407,423 @@ Shutting down trading bot...
 2025-05-25 17:13:09,130 - INFO - 
 Shutting down trading bot...
 2025-05-25 17:13:09,131 - INFO - Cleaning up and closing browser...
+2025-05-28 22:38:28,572 - INFO - Starting live trading bot...
+2025-05-28 22:38:29,609 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-28 22:38:33,251 - ERROR - Failed to initialize Chrome driver: Message: session not created: cannot connect to chrome at 127.0.0.1:62711
+from session not created: This version of ChromeDriver only supports Chrome version 137
+Current browser version is 136.0.7103.114
+Stacktrace:
+	GetHandleVerifier [0x0xc6f173+62931]
+	GetHandleVerifier [0x0xc6f1b4+62996]
+	(No symbol) [0x0xa81053]
+	(No symbol) [0x0xabad1b]
+	(No symbol) [0x0xab9d39]
+	(No symbol) [0x0xab043f]
+	(No symbol) [0x0xab0276]
+	(No symbol) [0x0xafa37a]
+	(No symbol) [0x0xaf9c1a]
+	(No symbol) [0x0xaee2a6]
+	(No symbol) [0x0xabd5f0]
+	(No symbol) [0x0xabe464]
+	GetHandleVerifier [0x0xec3463+2504899]
+	GetHandleVerifier [0x0xebe892+2485490]
+	GetHandleVerifier [0x0xc9590a+220522]
+	GetHandleVerifier [0x0xc86388+157672]
+	GetHandleVerifier [0x0xc8cb6d+184269]
+	GetHandleVerifier [0x0xc77158+95672]
+	GetHandleVerifier [0x0xc77300+96096]
+	GetHandleVerifier [0x0xc621aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-28 22:38:33,253 - INFO - Cleaning up and closing browser...
+2025-05-28 23:22:31,515 - INFO - Starting live trading bot...
+2025-05-28 23:22:32,603 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-28 23:22:35,335 - ERROR - Failed to initialize Chrome driver: Message: session not created: cannot connect to chrome at 127.0.0.1:63206
+from session not created: This version of ChromeDriver only supports Chrome version 137
+Current browser version is 136.0.7103.114
+Stacktrace:
+	GetHandleVerifier [0x0x122f173+62931]
+	GetHandleVerifier [0x0x122f1b4+62996]
+	(No symbol) [0x0x1041053]
+	(No symbol) [0x0x107ad1b]
+	(No symbol) [0x0x1079d39]
+	(No symbol) [0x0x107043f]
+	(No symbol) [0x0x1070276]
+	(No symbol) [0x0x10ba37a]
+	(No symbol) [0x0x10b9c1a]
+	(No symbol) [0x0x10ae2a6]
+	(No symbol) [0x0x107d5f0]
+	(No symbol) [0x0x107e464]
+	GetHandleVerifier [0x0x1483463+2504899]
+	GetHandleVerifier [0x0x147e892+2485490]
+	GetHandleVerifier [0x0x125590a+220522]
+	GetHandleVerifier [0x0x1246388+157672]
+	GetHandleVerifier [0x0x124cb6d+184269]
+	GetHandleVerifier [0x0x1237158+95672]
+	GetHandleVerifier [0x0x1237300+96096]
+	GetHandleVerifier [0x0x12221aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-28 23:22:35,335 - INFO - Cleaning up and closing browser...
+2025-05-29 20:51:39,785 - INFO - Starting live trading bot...
+2025-05-29 20:51:40,429 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-29 20:51:49,178 - INFO - Loaded saved cookies
+2025-05-29 20:51:53,612 - INFO - Successfully logged in using saved cookies
+2025-05-29 20:51:53,612 - INFO - Waiting 487 seconds for next candle open...
+2025-05-29 21:00:02,618 - WARNING - Failed to fetch data, retrying in 5 seconds...
+2025-05-29 21:00:07,620 - INFO - Waiting 893 seconds for next candle open...
+2025-05-29 21:01:19,140 - INFO - 
+Shutting down trading bot...
+2025-05-29 21:01:19,141 - INFO - Cleaning up and closing browser...
+2025-05-29 21:55:09,427 - INFO - Starting live trading bot...
+2025-05-29 21:55:11,036 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-29 21:55:17,219 - INFO - Loaded saved cookies
+2025-05-29 21:55:21,415 - INFO - Successfully logged in using saved cookies
+2025-05-29 21:55:21,415 - INFO - Waiting 279 seconds for next candle open...
+2025-05-29 21:55:37,637 - INFO - 
+Shutting down trading bot...
+2025-05-29 21:55:37,638 - INFO - Cleaning up and closing browser...
+2025-05-29 21:56:01,196 - INFO - Starting live trading bot...
+2025-05-29 21:56:02,068 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-29 21:56:08,057 - INFO - Loaded saved cookies
+2025-05-29 21:56:12,240 - INFO - Successfully logged in using saved cookies
+2025-05-29 21:56:12,240 - INFO - Waiting 228 seconds for next candle open...
+2025-05-29 21:56:49,707 - INFO - 
+Shutting down trading bot...
+2025-05-29 21:56:49,707 - INFO - Cleaning up and closing browser...
+2025-05-29 21:56:57,279 - INFO - Starting live trading bot...
+2025-05-29 21:56:58,452 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-29 21:57:07,233 - INFO - Loaded saved cookies
+2025-05-29 21:57:15,158 - INFO - Successfully logged in using saved cookies
+2025-05-29 21:57:15,158 - INFO - Waiting 165 seconds for next candle open...
+2025-05-29 22:00:02,530 - WARNING - Failed to fetch data, retrying in 5 seconds...
+2025-05-29 22:00:07,530 - INFO - Waiting 893 seconds for next candle open...
+2025-05-29 22:00:13,269 - INFO - 
+Shutting down trading bot...
+2025-05-29 22:00:13,269 - INFO - Cleaning up and closing browser...
+2025-05-29 22:10:44,704 - INFO - Starting live trading bot...
+2025-05-29 22:10:46,197 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-29 22:10:52,660 - INFO - Loaded saved cookies
+2025-05-29 22:10:57,027 - INFO - Successfully logged in using saved cookies
+2025-05-29 22:10:57,027 - INFO - Waiting 243 seconds for next candle open...
+2025-05-29 22:15:03,176 - INFO - Buy signal detected
+2025-05-29 22:15:03,177 - INFO - Placing Buy Order...
+2025-05-29 22:15:03,466 - INFO - Current XRP price (from fetched): $2.3053
+2025-05-29 22:15:10,149 - INFO - No confirmation dialog appeared
+2025-05-29 22:15:10,150 - INFO - Buy Order Placed: Bought $20 of XRP at approximately $2.3053 per XRP
+2025-05-29 22:15:10,150 - INFO - Strategy check completed at 2025-05-29 22:10:57.027890
+2025-05-29 22:15:10,150 - INFO - Waiting 890 seconds for next candle open...
+2025-05-29 22:30:03,266 - INFO - Strategy check completed at 2025-05-29 22:15:10.150755
+2025-05-29 22:30:03,266 - INFO - Waiting 897 seconds for next candle open...
+2025-05-29 22:45:03,277 - INFO - Strategy check completed at 2025-05-29 22:30:03.266286
+2025-05-29 22:45:03,277 - INFO - Waiting 897 seconds for next candle open...
+2025-05-29 23:00:03,183 - INFO - Sell signal detected
+2025-05-29 23:00:03,184 - INFO - Placing Sell Order...
+2025-05-29 23:00:03,508 - INFO - Current XRP price (from fetched): $2.3100
+2025-05-29 23:00:04,720 - ERROR - Error in main loop: Message: element click intercepted: Element <div role="tab" aria-selected="false" class="pi-tabs-tab-btn" tabindex="0" id="rc-tabs-2-tab-sell" aria-controls="rc-tabs-2-panel-sell">...</div> is not clickable at point (240, 138). Other element would receive the click: <div tabindex="-1" class="pi-modal-wrap pi-modal-centered">...</div>
+  (Session info: chrome=137.0.7151.56)
+Stacktrace:
+	GetHandleVerifier [0x0xb9f173+62931]
+	GetHandleVerifier [0x0xb9f1b4+62996]
+	(No symbol) [0x0x9b1053]
+	(No symbol) [0x0x9ffad0]
+	(No symbol) [0x0x9fde8a]
+	(No symbol) [0x0x9fba07]
+	(No symbol) [0x0x9fad0b]
+	(No symbol) [0x0x9ef365]
+	(No symbol) [0x0xa1e4ac]
+	(No symbol) [0x0x9eedf4]
+	(No symbol) [0x0xa1e724]
+	(No symbol) [0x0xa3f9e3]
+	(No symbol) [0x0xa1e2a6]
+	(No symbol) [0x0x9ed5f0]
+	(No symbol) [0x0x9ee464]
+	GetHandleVerifier [0x0xdf3463+2504899]
+	GetHandleVerifier [0x0xdee892+2485490]
+	GetHandleVerifier [0x0xbc590a+220522]
+	GetHandleVerifier [0x0xbb6388+157672]
+	GetHandleVerifier [0x0xbbcb6d+184269]
+	GetHandleVerifier [0x0xba7158+95672]
+	GetHandleVerifier [0x0xba7300+96096]
+	GetHandleVerifier [0x0xb921aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-29 23:00:09,722 - INFO - Waiting 891 seconds for next candle open...
+2025-05-29 23:15:03,739 - INFO - Sell signal detected
+2025-05-29 23:15:03,739 - INFO - Placing Sell Order...
+2025-05-29 23:15:03,970 - INFO - Current XRP price (from fetched): $2.3161
+2025-05-29 23:15:05,127 - ERROR - Error in main loop: Message: element click intercepted: Element <div role="tab" aria-selected="false" class="pi-tabs-tab-btn" tabindex="0" id="rc-tabs-2-tab-sell" aria-controls="rc-tabs-2-panel-sell">...</div> is not clickable at point (240, 138). Other element would receive the click: <div tabindex="-1" class="pi-modal-wrap pi-modal-centered">...</div>
+  (Session info: chrome=137.0.7151.56)
+Stacktrace:
+	GetHandleVerifier [0x0xb9f173+62931]
+	GetHandleVerifier [0x0xb9f1b4+62996]
+	(No symbol) [0x0x9b1053]
+	(No symbol) [0x0x9ffad0]
+	(No symbol) [0x0x9fde8a]
+	(No symbol) [0x0x9fba07]
+	(No symbol) [0x0x9fad0b]
+	(No symbol) [0x0x9ef365]
+	(No symbol) [0x0xa1e4ac]
+	(No symbol) [0x0x9eedf4]
+	(No symbol) [0x0xa1e724]
+	(No symbol) [0x0xa3f9e3]
+	(No symbol) [0x0xa1e2a6]
+	(No symbol) [0x0x9ed5f0]
+	(No symbol) [0x0x9ee464]
+	GetHandleVerifier [0x0xdf3463+2504899]
+	GetHandleVerifier [0x0xdee892+2485490]
+	GetHandleVerifier [0x0xbc590a+220522]
+	GetHandleVerifier [0x0xbb6388+157672]
+	GetHandleVerifier [0x0xbbcb6d+184269]
+	GetHandleVerifier [0x0xba7158+95672]
+	GetHandleVerifier [0x0xba7300+96096]
+	GetHandleVerifier [0x0xb921aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-29 23:15:10,130 - INFO - Waiting 890 seconds for next candle open...
+2025-05-29 23:30:03,137 - INFO - Sell signal detected
+2025-05-29 23:30:03,138 - INFO - Placing Sell Order...
+2025-05-29 23:30:03,265 - INFO - Current XRP price (from fetched): $2.3106
+2025-05-29 23:30:04,543 - ERROR - Error in main loop: Message: element click intercepted: Element <div role="tab" aria-selected="false" class="pi-tabs-tab-btn" tabindex="0" id="rc-tabs-2-tab-sell" aria-controls="rc-tabs-2-panel-sell">...</div> is not clickable at point (240, 138). Other element would receive the click: <div tabindex="-1" class="pi-modal-wrap pi-modal-centered">...</div>
+  (Session info: chrome=137.0.7151.56)
+Stacktrace:
+	GetHandleVerifier [0x0xb9f173+62931]
+	GetHandleVerifier [0x0xb9f1b4+62996]
+	(No symbol) [0x0x9b1053]
+	(No symbol) [0x0x9ffad0]
+	(No symbol) [0x0x9fde8a]
+	(No symbol) [0x0x9fba07]
+	(No symbol) [0x0x9fad0b]
+	(No symbol) [0x0x9ef365]
+	(No symbol) [0x0xa1e4ac]
+	(No symbol) [0x0x9eedf4]
+	(No symbol) [0x0xa1e724]
+	(No symbol) [0x0xa3f9e3]
+	(No symbol) [0x0xa1e2a6]
+	(No symbol) [0x0x9ed5f0]
+	(No symbol) [0x0x9ee464]
+	GetHandleVerifier [0x0xdf3463+2504899]
+	GetHandleVerifier [0x0xdee892+2485490]
+	GetHandleVerifier [0x0xbc590a+220522]
+	GetHandleVerifier [0x0xbb6388+157672]
+	GetHandleVerifier [0x0xbbcb6d+184269]
+	GetHandleVerifier [0x0xba7158+95672]
+	GetHandleVerifier [0x0xba7300+96096]
+	GetHandleVerifier [0x0xb921aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-29 23:30:09,545 - INFO - Waiting 891 seconds for next candle open...
+2025-05-30 10:04:05,938 - INFO - Sell signal detected
+2025-05-30 10:04:05,938 - INFO - Placing Sell Order...
+2025-05-30 10:04:06,139 - INFO - Current XRP price (from fetched): $2.2982
+2025-05-30 10:04:06,139 - ERROR - Error in main loop: Message: invalid session id: session deleted as the browser has closed the connection
+from disconnected: not connected to DevTools
+  (Session info: chrome=137.0.7151.56)
+Stacktrace:
+	GetHandleVerifier [0x0xb9f173+62931]
+	GetHandleVerifier [0x0xb9f1b4+62996]
+	(No symbol) [0x0x9b1053]
+	(No symbol) [0x0x9a0830]
+	(No symbol) [0x0x9be7ef]
+	(No symbol) [0x0xa2515c]
+	(No symbol) [0x0xa3f2f9]
+	(No symbol) [0x0xa1e2a6]
+	(No symbol) [0x0x9ed5f0]
+	(No symbol) [0x0x9ee464]
+	GetHandleVerifier [0x0xdf3463+2504899]
+	GetHandleVerifier [0x0xdee892+2485490]
+	GetHandleVerifier [0x0xbc590a+220522]
+	GetHandleVerifier [0x0xbb6388+157672]
+	GetHandleVerifier [0x0xbbcb6d+184269]
+	GetHandleVerifier [0x0xba7158+95672]
+	GetHandleVerifier [0x0xba7300+96096]
+	GetHandleVerifier [0x0xb921aa+9738]
+	BaseThreadInitThunk [0x0x76805d49+25]
+	RtlInitializeExceptionChain [0x0x77ced03b+107]
+	RtlGetAppContainerNamedObjectPath [0x0x77cecfc1+561]
+
+2025-05-30 10:35:21,089 - INFO - Waiting 579 seconds for next candle open...
+2025-05-30 10:36:18,227 - INFO - 
+Shutting down trading bot...
+2025-05-30 10:36:18,227 - INFO - Cleaning up and closing browser...
+2025-05-30 21:10:21,993 - INFO - Starting live trading bot...
+2025-05-30 21:10:22,627 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-30 21:10:37,989 - INFO - Loaded saved cookies
+2025-05-30 21:10:45,987 - INFO - Successfully logged in using saved cookies
+2025-05-30 21:10:45,988 - INFO - Waiting 255 seconds for next candle open...
+2025-05-30 21:15:04,157 - INFO - Buy signal detected
+2025-05-30 21:15:04,158 - INFO - Placing Buy Order...
+2025-05-30 21:15:04,335 - INFO - Current XRP price (from fetched): $2.3432
+2025-05-30 21:15:09,949 - INFO - Confirmed buy order in dialog
+2025-05-30 21:15:09,949 - INFO - Buy Order Placed: Bought $20 of XRP at approximately $2.3432 per XRP
+2025-05-30 21:15:09,950 - INFO - Strategy check completed at 2025-05-30 21:10:45.988336
+2025-05-30 21:15:09,950 - INFO - Waiting 891 seconds for next candle open...
+2025-05-30 21:30:04,248 - INFO - Strategy check completed at 2025-05-30 21:15:09.950982
+2025-05-30 21:30:04,248 - INFO - Waiting 896 seconds for next candle open...
+2025-05-30 21:45:03,507 - INFO - Strategy check completed at 2025-05-30 21:30:04.248736
+2025-05-30 21:45:03,508 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 22:00:04,244 - INFO - Strategy check completed at 2025-05-30 21:45:03.508113
+2025-05-30 22:00:04,245 - INFO - Waiting 896 seconds for next candle open...
+2025-05-30 22:15:03,247 - INFO - Strategy check completed at 2025-05-30 22:00:04.245654
+2025-05-30 22:15:03,249 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 22:30:03,555 - INFO - Strategy check completed at 2025-05-30 22:15:03.249115
+2025-05-30 22:30:03,556 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 22:45:03,368 - INFO - Strategy check completed at 2025-05-30 22:30:03.556105
+2025-05-30 22:45:03,369 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 23:00:03,663 - INFO - Strategy check completed at 2025-05-30 22:45:03.369182
+2025-05-30 23:00:03,664 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 23:15:03,685 - INFO - Strategy check completed at 2025-05-30 23:00:03.663245
+2025-05-30 23:15:03,686 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 23:30:03,568 - INFO - Strategy check completed at 2025-05-30 23:15:03.686630
+2025-05-30 23:30:03,568 - INFO - Waiting 897 seconds for next candle open...
+2025-05-30 23:45:03,539 - INFO - Strategy check completed at 2025-05-30 23:30:03.568500
+2025-05-30 23:45:03,540 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 00:00:03,657 - INFO - Strategy check completed at 2025-05-30 23:45:03.540322
+2025-05-31 00:00:03,658 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 00:15:03,714 - INFO - Sell signal detected
+2025-05-31 00:15:03,714 - INFO - Placing Sell Order...
+2025-05-31 00:15:03,858 - INFO - Current XRP price (from fetched): $2.3369
+2025-05-31 00:15:05,140 - INFO - Confirmed sell order in dialog
+2025-05-31 00:15:05,140 - INFO - Sell Order Placed: Sold 9.5 XRP at approximately $2.3369 per XRP
+2025-05-31 00:15:05,141 - INFO - Strategy check completed at 2025-05-31 00:00:03.658315
+2025-05-31 00:15:05,141 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 00:30:03,057 - INFO - Strategy check completed at 2025-05-31 00:15:05.141014
+2025-05-31 00:30:03,057 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 00:45:03,182 - INFO - Strategy check completed at 2025-05-31 00:30:03.057231
+2025-05-31 00:45:03,182 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 01:00:03,025 - INFO - Strategy check completed at 2025-05-31 00:45:03.182775
+2025-05-31 01:00:03,025 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 01:15:02,869 - INFO - Strategy check completed at 2025-05-31 01:00:03.025115
+2025-05-31 01:15:02,869 - INFO - Waiting 898 seconds for next candle open...
+2025-05-31 01:30:03,714 - INFO - Buy signal detected
+2025-05-31 01:30:03,715 - INFO - Placing Buy Order...
+2025-05-31 01:30:03,874 - INFO - Current XRP price (from fetched): $2.3426
+2025-05-31 01:30:05,112 - INFO - Confirmed buy order in dialog
+2025-05-31 01:30:05,113 - INFO - Buy Order Placed: Bought $20 of XRP at approximately $2.3426 per XRP
+2025-05-31 01:30:05,116 - INFO - Strategy check completed at 2025-05-31 01:15:02.869948
+2025-05-31 01:30:05,117 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 01:45:03,026 - INFO - Strategy check completed at 2025-05-31 01:30:05.117814
+2025-05-31 01:45:03,026 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 02:00:02,851 - INFO - Strategy check completed at 2025-05-31 01:45:03.026906
+2025-05-31 02:00:02,852 - INFO - Waiting 898 seconds for next candle open...
+2025-05-31 02:15:04,680 - INFO - Strategy check completed at 2025-05-31 02:00:02.852703
+2025-05-31 02:15:04,681 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 02:30:04,589 - INFO - Strategy check completed at 2025-05-31 02:15:04.681632
+2025-05-31 02:30:04,590 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 02:45:04,472 - INFO - Strategy check completed at 2025-05-31 02:30:04.590632
+2025-05-31 02:45:04,473 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 03:00:04,324 - INFO - Strategy check completed at 2025-05-31 02:45:04.473796
+2025-05-31 03:00:04,326 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 03:15:04,210 - INFO - Strategy check completed at 2025-05-31 03:00:04.326008
+2025-05-31 03:15:04,211 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 03:30:04,121 - INFO - Strategy check completed at 2025-05-31 03:15:04.211188
+2025-05-31 03:30:04,121 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 03:45:04,034 - INFO - Sell signal detected
+2025-05-31 03:45:04,035 - INFO - Placing Sell Order...
+2025-05-31 03:45:04,165 - INFO - Current XRP price (from fetched): $2.3385
+2025-05-31 03:45:05,584 - INFO - Confirmed sell order in dialog
+2025-05-31 03:45:05,584 - INFO - Sell Order Placed: Sold 9.3 XRP at approximately $2.3385 per XRP
+2025-05-31 03:45:05,584 - INFO - Strategy check completed at 2025-05-31 03:30:04.121062
+2025-05-31 03:45:05,584 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 04:00:04,462 - INFO - Strategy check completed at 2025-05-31 03:45:05.584638
+2025-05-31 04:00:04,463 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 04:15:04,264 - INFO - Strategy check completed at 2025-05-31 04:00:04.463283
+2025-05-31 04:15:04,265 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 04:30:04,144 - INFO - Strategy check completed at 2025-05-31 04:15:04.265971
+2025-05-31 04:30:04,144 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 04:45:03,893 - INFO - Strategy check completed at 2025-05-31 04:30:04.144543
+2025-05-31 04:45:03,894 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 05:00:04,687 - INFO - Buy signal detected
+2025-05-31 05:00:04,687 - INFO - Placing Buy Order...
+2025-05-31 05:00:04,961 - INFO - Current XRP price (from fetched): $2.3492
+2025-05-31 05:00:06,385 - INFO - Confirmed buy order in dialog
+2025-05-31 05:00:06,385 - INFO - Buy Order Placed: Bought $20 of XRP at approximately $2.3492 per XRP
+2025-05-31 05:00:06,386 - INFO - Strategy check completed at 2025-05-31 04:45:03.894136
+2025-05-31 05:00:06,386 - INFO - Waiting 894 seconds for next candle open...
+2025-05-31 05:15:04,281 - INFO - Strategy check completed at 2025-05-31 05:00:06.386156
+2025-05-31 05:15:04,282 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 05:30:04,248 - INFO - Strategy check completed at 2025-05-31 05:15:04.282971
+2025-05-31 05:30:04,249 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 05:45:04,016 - INFO - Strategy check completed at 2025-05-31 05:30:04.249434
+2025-05-31 05:45:04,016 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 06:00:03,982 - INFO - Strategy check completed at 2025-05-31 05:45:04.016923
+2025-05-31 06:00:03,982 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 06:15:05,036 - INFO - Strategy check completed at 2025-05-31 06:00:03.982864
+2025-05-31 06:15:05,036 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 06:30:03,814 - INFO - Strategy check completed at 2025-05-31 06:15:05.036164
+2025-05-31 06:30:03,815 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 06:45:04,821 - INFO - Strategy check completed at 2025-05-31 06:30:03.815205
+2025-05-31 06:45:04,821 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 07:00:04,755 - INFO - Strategy check completed at 2025-05-31 06:45:04.821901
+2025-05-31 07:00:04,756 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 07:15:04,760 - INFO - Strategy check completed at 2025-05-31 07:00:04.756458
+2025-05-31 07:15:04,761 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 07:30:03,811 - INFO - Strategy check completed at 2025-05-31 07:15:04.761609
+2025-05-31 07:30:03,811 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 07:45:04,754 - INFO - Strategy check completed at 2025-05-31 07:30:03.811450
+2025-05-31 07:45:04,754 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 08:00:04,968 - INFO - Strategy check completed at 2025-05-31 07:45:04.754415
+2025-05-31 08:00:04,968 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 08:15:04,925 - INFO - Strategy check completed at 2025-05-31 08:00:04.968410
+2025-05-31 08:15:04,925 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 08:30:04,704 - INFO - Strategy check completed at 2025-05-31 08:15:04.925483
+2025-05-31 08:30:04,704 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 08:45:04,491 - INFO - Strategy check completed at 2025-05-31 08:30:04.704589
+2025-05-31 08:45:04,492 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 09:00:04,425 - INFO - Strategy check completed at 2025-05-31 08:45:04.491168
+2025-05-31 09:00:04,426 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 09:15:04,288 - INFO - Strategy check completed at 2025-05-31 09:00:04.426254
+2025-05-31 09:15:04,289 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 09:30:04,189 - INFO - Strategy check completed at 2025-05-31 09:15:04.289423
+2025-05-31 09:30:04,189 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 09:45:03,957 - INFO - Strategy check completed at 2025-05-31 09:30:04.189702
+2025-05-31 09:45:03,958 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 10:00:05,040 - INFO - Strategy check completed at 2025-05-31 09:45:03.958215
+2025-05-31 10:00:05,041 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 10:15:03,767 - INFO - Strategy check completed at 2025-05-31 10:00:05.041484
+2025-05-31 10:15:03,767 - INFO - Waiting 897 seconds for next candle open...
+2025-05-31 10:30:04,633 - INFO - Strategy check completed at 2025-05-31 10:15:03.767949
+2025-05-31 10:30:04,634 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 10:45:04,698 - INFO - Strategy check completed at 2025-05-31 10:30:04.634299
+2025-05-31 10:45:04,698 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 11:00:04,543 - INFO - Strategy check completed at 2025-05-31 10:45:04.698622
+2025-05-31 11:00:04,544 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 11:15:04,452 - INFO - Strategy check completed at 2025-05-31 11:00:04.544910
+2025-05-31 11:15:04,452 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 11:30:04,488 - INFO - Strategy check completed at 2025-05-31 11:15:04.452953
+2025-05-31 11:30:04,489 - INFO - Waiting 896 seconds for next candle open...
+2025-05-31 11:45:04,491 - INFO - Sell signal detected
+2025-05-31 11:45:04,491 - INFO - Placing Sell Order...
+2025-05-31 11:45:04,668 - INFO - Current XRP price (from fetched): $2.3255
+2025-05-31 11:45:05,955 - INFO - Confirmed sell order in dialog
+2025-05-31 11:45:05,955 - INFO - Sell Order Placed: Sold 9.4 XRP at approximately $2.3255 per XRP
+2025-05-31 11:45:05,956 - INFO - Strategy check completed at 2025-05-31 11:30:04.489195
+2025-05-31 11:45:05,957 - INFO - Waiting 895 seconds for next candle open...
+2025-05-31 11:58:26,800 - INFO - 
+Shutting down trading bot...
+2025-05-31 11:58:26,801 - INFO - Cleaning up and closing browser...
+2025-05-31 11:58:35,890 - INFO - Starting live trading bot...
+2025-05-31 11:58:36,517 - INFO - patching driver executable C:\Users\micha\appdata\roaming\undetected_chromedriver\undetected_chromedriver.exe
+2025-05-31 11:58:42,393 - INFO - Loaded saved cookies
+2025-05-31 11:58:46,625 - INFO - Successfully logged in using saved cookies
+2025-05-31 11:58:46,625 - INFO - Waiting 74 seconds for next candle open...
+2025-05-31 12:00:03,509 - INFO - Sell signal detected
+2025-05-31 12:00:03,512 - INFO - Placing Sell Order...
+2025-05-31 12:00:03,807 - INFO - Current XRP price (from fetched): $2.3207
+2025-05-31 12:00:09,906 - INFO - No confirmation dialog appeared
+2025-05-31 12:00:09,906 - INFO - Sell Order Placed: Sold 0.0 XRP at approximately $2.3207 per XRP
+2025-05-31 12:00:09,908 - INFO - Strategy check completed at 2025-05-31 11:58:46.625503
+2025-05-31 12:00:09,908 - INFO - Waiting 891 seconds for next candle open...
+2025-05-31 12:15:01,717 - INFO - 
+Shutting down trading bot...
+2025-05-31 12:15:01,718 - INFO - Cleaning up and closing browser...
