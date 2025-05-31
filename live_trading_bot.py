@@ -15,6 +15,7 @@ import logging
 import pytz
 import os
 import pickle
+import requests
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +39,7 @@ class HARSIStrategy(Strategy):
     smooth_d = 3
     max_ha_cross = 10
     window = 100
+    ha_smooth_period = 2
     last_action = None
 
     def init(self):
@@ -66,6 +68,19 @@ class HARSIStrategy(Strategy):
         self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
         self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
         self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
+
+        # Apply smoothing to Heikin Ashi values
+        def smooth_ha_values(values):
+            smoothed = np.zeros_like(values)
+            for i in range(len(values)):
+                start_idx = max(0, i - self.ha_smooth_period + 1)
+                smoothed[i] = np.mean(values[start_idx:i+1])
+            return smoothed
+        
+        self.ha_open = self.I(smooth_ha_values, self.ha_open)
+        self.ha_close = self.I(smooth_ha_values, self.ha_close)
+        self.ha_high = self.I(smooth_ha_values, self.ha_high)
+        self.ha_low = self.I(smooth_ha_values, self.ha_low)
         
         def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
             min_val = min(ha_low[-self.window:])
@@ -165,10 +180,11 @@ class LiveTrader:
     def __init__(self):
         self.cookies_file = 'pionex_cookies.pkl'
         self.driver = None
-        self.symbol = 'XRP-USD'
-        self.interval = '15m'
+        self.symbol = 'XRP_USDT'
+        self.interval = '15M'
         self.last_action = None
         self.last_check_time = None
+        self.BUY_PERCENTAGE = 0.7
         
     def setup_driver(self):
         """Initialize the Chrome driver with saved cookies if available"""
@@ -265,8 +281,8 @@ class LiveTrader:
         balance_value = float(balance_text)
 
         # Calculate amount
-        # amount = balance_value * BUY_PERCENTAGE
-        amount = 20
+        amount = balance_value * self.BUY_PERCENTAGE
+        # amount = 20
         
         input_box = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
@@ -345,19 +361,43 @@ class LiveTrader:
         logging.info(f"Sell Order Placed: Sold {balance_value} XRP at approximately ${current_price:.4f} per XRP")
 
     def fetch_live_data(self):
-        end_date = datetime.now(pytz.UTC)  # Get current time in UTC
-        start_date = end_date - timedelta(days=1)  # Get last 24 hours of data
-        
+        url = "https://api.pionex.com/api/v1/market/klines"
+        params = {
+            "symbol": self.symbol,
+            "interval": self.interval,
+            "limit": 500
+        }
+
         try:
-            ticker = yf.Ticker(self.symbol)
-            data = ticker.history(start=start_date, end=end_date, interval=self.interval)
-            if not data.empty:
-                # Convert index from UTC to PST
-                data.index = data.index.tz_convert('America/Los_Angeles')
-                return data
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            if not data.get("result"):
+                print("API returned an error:", data)
+                return None
+
+            klines = data["data"]["klines"]
+            df = pd.DataFrame(klines)
+            df["timestamp"] = pd.to_datetime(df["time"], unit='ms', utc=True)
+            df.set_index("timestamp", inplace=True)
+
+            df = df.rename(columns={
+                "open": "Open",
+                "high": "High",
+                "low": "Low",
+                "close": "Close",
+                "volume": "Volume"
+            })
+
+            # Convert all columns to numeric types
+            df = df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
+
+            return df
+
         except Exception as e:
-            logging.error(f"Error fetching data: {str(e)}")
-        return None
+            print("Error fetching Pionex data:", e)
+            return None
 
     def run(self):
         logging.info("Starting live trading bot...")

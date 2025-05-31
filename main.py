@@ -20,6 +20,7 @@ class HARSIStrategy(Strategy):
     smooth_d = 3
     max_ha_cross = 10
     window = 100
+    ha_smooth_period = 2  # New parameter for Heikin Ashi smoothing
 
     def init(self):
         # Calculate Heikin Ashi values
@@ -48,6 +49,19 @@ class HARSIStrategy(Strategy):
         self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
         self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
         self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
+        
+        # Apply smoothing to Heikin Ashi values
+        def smooth_ha_values(values):
+            smoothed = np.zeros_like(values)
+            for i in range(len(values)):
+                start_idx = max(0, i - self.ha_smooth_period + 1)
+                smoothed[i] = np.mean(values[start_idx:i+1])
+            return smoothed
+        
+        self.ha_open = self.I(smooth_ha_values, self.ha_open)
+        self.ha_close = self.I(smooth_ha_values, self.ha_close)
+        self.ha_high = self.I(smooth_ha_values, self.ha_high)
+        self.ha_low = self.I(smooth_ha_values, self.ha_low)
         
         # Calculate scaling factors
         def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
@@ -150,7 +164,8 @@ class HARSIStrategy(Strategy):
         
         # Execute trades
         if long_condition and not self.position:
-            self.buy()
+            # Use 50% of equity as a fraction
+            self.buy(size=0.7)
         elif exit_condition and self.position:
             self.position.close()
 
@@ -231,8 +246,9 @@ def fetch_data_from_pionex(symbol="XRP_USDT", interval="15M", limit=500):
 if __name__ == '__main__':
     # Example usage with yfinance
     symbol = 'XRP_USDT'
+    # symbol = 'XRP-USD'
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=5)  # 59 days of data
+    start_date = end_date - timedelta(days=59)  # 59 days of data
     
     print(f"Fetching data for {symbol}...")
     # Fetch data with retry mechanism
@@ -255,11 +271,11 @@ if __name__ == '__main__':
         
         # data.to_csv('data.csv')
 
-        # # Export last 30 trades to CSV
-        # last_30_trades = stats['_trades'].tail(30)
-        # csv_filename = f'trades_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
-        # last_30_trades.to_csv(csv_filename)
-        # print(f"\nExported last 30 trades to {csv_filename}")
+        # Export last 30 trades to CSV
+        trades = stats['_trades']
+        csv_filename = f'trades.csv'
+        trades.to_csv(csv_filename)
+        print(f"\nExported trades to {csv_filename}")
         
         bt.plot()
     else:
