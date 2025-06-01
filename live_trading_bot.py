@@ -195,19 +195,19 @@ class LiveTrader:
         
         # Add Firefox options for stability
         options = Options()
+        options.profile = firefox_profile_dir
         options.set_preference("browser.download.folderList", 2)
         options.set_preference("browser.download.manager.showWhenStarting", False)
         options.set_preference("browser.download.dir", firefox_profile_dir)
         options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
         options.set_preference("browser.privatebrowsing.autostart", False)
-        
-        # Create Firefox profile
-        profile = webdriver.FirefoxProfile(firefox_profile_dir)
-        profile.set_preference("dom.webdriver.enabled", False)
-        profile.set_preference("useAutomationExtension", False)
-        
+        options.set_preference("dom.webdriver.enabled", False)
+        options.set_preference("useAutomationExtension", False)
+       
+        gecko_path = "/usr/bin/geckodriver"
+
         try:
-            self.driver = webdriver.Firefox(options=options, firefox_profile=profile)
+            self.driver = webdriver.Firefox(service=Service(gecko_path), options=options)
             self.driver.get("https://www.pionex.us/")
             self.driver.maximize_window()
             
@@ -305,7 +305,7 @@ class LiveTrader:
         
         # Check for and handle confirmation dialog
         try:
-            confirm_button = WebDriverWait(self.driver, 5).until(
+            confirm_button = WebDriverWait(self.driver, 15).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
             )
             confirm_button.click()
@@ -358,7 +358,7 @@ class LiveTrader:
         
         # Check for and handle confirmation dialog
         try:
-            confirm_button = WebDriverWait(self.driver, 5).until(
+            confirm_button = WebDriverWait(self.driver, 15).until(
                 EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
             )
             confirm_button.click()
@@ -434,7 +434,7 @@ class LiveTrader:
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
                 stats = bt.run()
-                bt.plot()
+                # bt.plot()
                 
                 # Get the last action from the strategy
                 last_action = stats['_strategy'].last_action
