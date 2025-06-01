@@ -10,8 +10,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
 import logging
 import pytz
 import os
@@ -188,40 +188,26 @@ class LiveTrader:
         self.BUY_PERCENTAGE = 0.7
         
     def setup_driver(self):
-        """Initialize the Chrome driver with saved cookies if available"""
-        # Create chrome profile directory in the user's home directory
-        chrome_profile_dir = os.path.join(os.path.expanduser('~'), 'pionex_chrome_profile')
-        os.makedirs(chrome_profile_dir, exist_ok=True)
+        """Initialize the Firefox driver with saved cookies if available"""
+        # Create firefox profile directory in the user's home directory
+        firefox_profile_dir = os.path.join(os.path.expanduser('~'), 'pionex_firefox_profile')
+        os.makedirs(firefox_profile_dir, exist_ok=True)
         
-        # Add more Chrome options for stability
+        # Add Firefox options for stability
         options = Options()
-        options.add_argument(f'--user-data-dir={chrome_profile_dir}')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--disable-extensions')
-        options.add_argument('--disable-software-rasterizer')
-        # Add additional options to handle GPU and network issues
-        options.add_argument('--disable-gpu-sandbox')
-        options.add_argument('--disable-software-rasterizer')
-        options.add_argument('--disable-webgl')
-        options.add_argument('--disable-webgl2')
-        options.add_argument('--disable-features=NetworkService')
-        options.add_argument('--dns-prefetch-disable')
-        options.add_argument('--disable-background-networking')
-        options.add_argument('--disable-default-apps')
-        options.add_argument('--disable-sync')
-        options.add_argument('--disable-translate')
-        options.add_argument('--metrics-recording-only')
-        options.add_argument('--mute-audio')
-        options.add_argument('--no-first-run')
-        options.add_argument('--safebrowsing-disable-auto-update')
-        options.add_argument('--password-store=basic')
-        options.add_argument('--use-mock-keychain')
-        options.add_argument('--disable-features=IsolateOrigins,site-per-process')
+        options.set_preference("browser.download.folderList", 2)
+        options.set_preference("browser.download.manager.showWhenStarting", False)
+        options.set_preference("browser.download.dir", firefox_profile_dir)
+        options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
+        options.set_preference("browser.privatebrowsing.autostart", False)
+        
+        # Create Firefox profile
+        profile = webdriver.FirefoxProfile(firefox_profile_dir)
+        profile.set_preference("dom.webdriver.enabled", False)
+        profile.set_preference("useAutomationExtension", False)
         
         try:
-            self.driver = webdriver.Chrome(options=options)
+            self.driver = webdriver.Firefox(options=options, firefox_profile=profile)
             self.driver.get("https://www.pionex.us/")
             self.driver.maximize_window()
             
@@ -230,6 +216,9 @@ class LiveTrader:
                 try:
                     cookies = pickle.load(open(self.cookies_file, "rb"))
                     for cookie in cookies:
+                        # Firefox requires domain to be set for cookies
+                        if 'domain' not in cookie:
+                            cookie['domain'] = '.pionex.us'
                         self.driver.add_cookie(cookie)
                     self.driver.refresh()
                     logging.info("Loaded saved cookies")
@@ -261,13 +250,13 @@ class LiveTrader:
                 logging.error(f"Error saving cookies: {str(e)}")
                 
         except Exception as e:
-            logging.error(f"Failed to initialize Chrome driver: {str(e)}")
+            logging.error(f"Failed to initialize Firefox driver: {str(e)}")
             if self.driver:
                 try:
                     self.driver.quit()
                 except:
                     pass
-            raise Exception("Failed to initialize Chrome. Please make sure Chrome is installed and not running in the background.")
+            raise Exception("Failed to initialize Firefox. Please make sure Firefox and geckodriver are installed.")
 
     def buy(self):
         logging.info("Placing Buy Order...")
