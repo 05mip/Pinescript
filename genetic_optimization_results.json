@@ -1,0 +1,827 @@
+[
+    {
+        "generation": 1,
+        "best_score": 1.7273812824394614,
+        "best_params": {
+            "portfolio_change_multiplier": 82.37788131961489,
+            "stop_loss_penalty": 40.10609166696925,
+            "take_profit_reward": 20.006528203054028,
+            "excessive_trade_base_penalty": 225.6111274875302,
+            "high_win_rate_bonus": 24.459844718406025,
+            "win_rate_window": 15,
+            "holding_reward_multiplier": 2.582935688588461
+        },
+        "all_results": [
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": 1.7273812824394614,
+                "avg_win_rate": 0.5254629629629629,
+                "avg_num_trades": 23.666666666666668,
+                "std_returns": 3.2419760366801706
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 179.82425542232252,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 7.18143793447409
+                },
+                "avg_returns": -1.5929915885531833,
+                "avg_win_rate": 0.4568627450980392,
+                "avg_num_trades": 14.333333333333334,
+                "std_returns": 5.111288713951562
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 249.20765398726323,
+                    "stop_loss_penalty": 46.13398291523871,
+                    "take_profit_reward": 16.196162301367668,
+                    "excessive_trade_base_penalty": 279.0768423160904,
+                    "high_win_rate_bonus": 20.087711441407343,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 4.311260086849307
+                },
+                "avg_returns": -2.104305167974011,
+                "avg_win_rate": 0.5145888594164456,
+                "avg_num_trades": 19.666666666666668,
+                "std_returns": 6.0640778950486744
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 169.19040811884233,
+                    "stop_loss_penalty": 17.683169346844135,
+                    "take_profit_reward": 43.45778425145334,
+                    "excessive_trade_base_penalty": 298.9673478962882,
+                    "high_win_rate_bonus": 23.26227201480689,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 7.006001084226968
+                },
+                "avg_returns": -2.2248501629177073,
+                "avg_win_rate": 0.4694331983805668,
+                "avg_num_trades": 21.666666666666668,
+                "std_returns": 2.935371910568328
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 178.14528922737645,
+                    "stop_loss_penalty": 44.784544226840794,
+                    "take_profit_reward": 14.367485079294724,
+                    "excessive_trade_base_penalty": 176.67253578684978,
+                    "high_win_rate_bonus": 25.597732424705498,
+                    "win_rate_window": 20,
+                    "holding_reward_multiplier": 2.2734844745156546
+                },
+                "avg_returns": -2.2605830107367364,
+                "avg_win_rate": 0.45634920634920634,
+                "avg_num_trades": 12.333333333333334,
+                "std_returns": 5.099466868360544
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 224.7005656081725,
+                    "stop_loss_penalty": 40.45850847694274,
+                    "take_profit_reward": 16.862245792286757,
+                    "excessive_trade_base_penalty": 122.67470890281535,
+                    "high_win_rate_bonus": 33.94854561099447,
+                    "win_rate_window": 9,
+                    "holding_reward_multiplier": 5.242221999657142
+                },
+                "avg_returns": -2.765892150642825,
+                "avg_win_rate": 0.4348739495798319,
+                "avg_num_trades": 27.666666666666668,
+                "std_returns": 4.750403179070567
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 204.86478280508544,
+                    "stop_loss_penalty": 15.75820285137571,
+                    "take_profit_reward": 37.02233514513316,
+                    "excessive_trade_base_penalty": 150.8578703556431,
+                    "high_win_rate_bonus": 31.470932016772096,
+                    "win_rate_window": 17,
+                    "holding_reward_multiplier": 2.9666266515747886
+                },
+                "avg_returns": -2.8664686896830247,
+                "avg_win_rate": 0.4682539682539682,
+                "avg_num_trades": 12.333333333333334,
+                "std_returns": 5.015018605629457
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 148.0950051132197,
+                    "stop_loss_penalty": 10.022521312773653,
+                    "take_profit_reward": 43.01796696244911,
+                    "excessive_trade_base_penalty": 213.47560774520554,
+                    "high_win_rate_bonus": 16.989665473580622,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 8.75238703453648
+                },
+                "avg_returns": -3.055739632119888,
+                "avg_win_rate": 0.6450617283950617,
+                "avg_num_trades": 12.333333333333334,
+                "std_returns": 3.6414353910676875
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 152.00055127709123,
+                    "stop_loss_penalty": 17.289847711981906,
+                    "take_profit_reward": 23.446780910838537,
+                    "excessive_trade_base_penalty": 287.3961022828216,
+                    "high_win_rate_bonus": 20.922226830433768,
+                    "win_rate_window": 27,
+                    "holding_reward_multiplier": 6.069669403508806
+                },
+                "avg_returns": -3.5661624341416727,
+                "avg_win_rate": 0.4444444444444444,
+                "avg_num_trades": 17.0,
+                "std_returns": 1.917169003091824
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 210.2647024439745,
+                    "stop_loss_penalty": 47.39523023253471,
+                    "take_profit_reward": 30.05071251576865,
+                    "excessive_trade_base_penalty": 142.9468371504919,
+                    "high_win_rate_bonus": 31.989940774383953,
+                    "win_rate_window": 28,
+                    "holding_reward_multiplier": 14.85858677623192
+                },
+                "avg_returns": -3.7483071448498895,
+                "avg_win_rate": 0.4777777777777777,
+                "avg_num_trades": 12.0,
+                "std_returns": 5.0546141443328745
+            }
+        ]
+    },
+    {
+        "generation": 2,
+        "best_score": 1.7273812824394614,
+        "best_params": {
+            "portfolio_change_multiplier": 82.37788131961489,
+            "stop_loss_penalty": 40.10609166696925,
+            "take_profit_reward": 20.006528203054028,
+            "excessive_trade_base_penalty": 225.6111274875302,
+            "high_win_rate_bonus": 24.459844718406025,
+            "win_rate_window": 15,
+            "holding_reward_multiplier": 2.582935688588461
+        },
+        "all_results": [
+            {
+                "params": {
+                    "portfolio_change_multiplier": 60.436345271290016,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -0.728474787666625,
+                "avg_win_rate": 0.40812324929971994,
+                "avg_num_trades": 28.666666666666668,
+                "std_returns": 1.7525735913898832
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.87810954117515,
+                    "stop_loss_penalty": 62.27275145909691,
+                    "take_profit_reward": 16.196162301367668,
+                    "excessive_trade_base_penalty": 201.939616277731,
+                    "high_win_rate_bonus": 19.150851884998325,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 5.394169574453744
+                },
+                "avg_returns": -1.6929949469344379,
+                "avg_win_rate": 0.4444444444444445,
+                "avg_num_trades": 20.0,
+                "std_returns": 2.5496348121172514
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 179.82425542232252,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 7.18143793447409
+                },
+                "avg_returns": -1.7363383249488773,
+                "avg_win_rate": 0.5714285714285715,
+                "avg_num_trades": 12.333333333333334,
+                "std_returns": 5.806601580339914
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.5487853045206,
+                    "stop_loss_penalty": 46.13398291523871,
+                    "take_profit_reward": 16.196162301367668,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 4.311260086849307
+                },
+                "avg_returns": -2.2243659922789085,
+                "avg_win_rate": 0.48808003405704553,
+                "avg_num_trades": 20.0,
+                "std_returns": 3.751809202827948
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.275366410533467,
+                "avg_win_rate": 0.3839285714285714,
+                "avg_num_trades": 29.333333333333332,
+                "std_returns": 3.0813565761534845
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.4668741119178597,
+                "avg_win_rate": 0.5,
+                "avg_num_trades": 7.0,
+                "std_returns": 4.740654078447378
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 249.20765398726323,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 4.311260086849307
+                },
+                "avg_returns": -2.90761626960589,
+                "avg_win_rate": 0.4851851851851852,
+                "avg_num_trades": 17.0,
+                "std_returns": 3.7248318737955466
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 22.179920185506678,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.9522414075949683,
+                "avg_win_rate": 0.3863826232247285,
+                "avg_num_trades": 14.666666666666666,
+                "std_returns": 4.480383493817449
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 178.14528922737645,
+                    "stop_loss_penalty": 17.683169346844135,
+                    "take_profit_reward": 14.367485079294724,
+                    "excessive_trade_base_penalty": 176.67253578684978,
+                    "high_win_rate_bonus": 25.597732424705498,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.2734844745156546
+                },
+                "avg_returns": -3.6128119456049235,
+                "avg_win_rate": 0.4280544912728821,
+                "avg_num_trades": 20.0,
+                "std_returns": 3.2018885639035175
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 298.9673478962882,
+                    "high_win_rate_bonus": 23.26227201480689,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 3.7908314822465967
+                },
+                "avg_returns": -5.058460851392532,
+                "avg_win_rate": 0.2644444444444445,
+                "avg_num_trades": 20.0,
+                "std_returns": 3.4687776158257693
+            }
+        ]
+    },
+    {
+        "generation": 3,
+        "best_score": 1.7273812824394614,
+        "best_params": {
+            "portfolio_change_multiplier": 82.37788131961489,
+            "stop_loss_penalty": 40.10609166696925,
+            "take_profit_reward": 20.006528203054028,
+            "excessive_trade_base_penalty": 225.6111274875302,
+            "high_win_rate_bonus": 24.459844718406025,
+            "win_rate_window": 15,
+            "holding_reward_multiplier": 2.582935688588461
+        },
+        "all_results": [
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 26.512301490257066,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": 1.20777255096277,
+                "avg_win_rate": 0.5555555555555555,
+                "avg_num_trades": 15.333333333333334,
+                "std_returns": 6.075735221000433
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 73.46844284492856,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.0267607905998264
+                },
+                "avg_returns": -0.45211780354117465,
+                "avg_win_rate": 0.505941770647653,
+                "avg_num_trades": 23.666666666666668,
+                "std_returns": 5.872442055302585
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.5487853045206,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 20,
+                    "holding_reward_multiplier": 4.311260086849307
+                },
+                "avg_returns": -1.2278772439411536,
+                "avg_win_rate": 0.4475068141734808,
+                "avg_num_trades": 28.0,
+                "std_returns": 3.5747261174399356
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.87810954117515,
+                    "stop_loss_penalty": 62.27275145909691,
+                    "take_profit_reward": 16.196162301367668,
+                    "excessive_trade_base_penalty": 201.939616277731,
+                    "high_win_rate_bonus": 19.150851884998325,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 5.394169574453744
+                },
+                "avg_returns": -1.659255333476006,
+                "avg_win_rate": 0.45,
+                "avg_num_trades": 12.333333333333334,
+                "std_returns": 4.5537455625320105
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 60.436345271290016,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -1.7879362100470824,
+                "avg_win_rate": 0.48505523066926576,
+                "avg_num_trades": 16.666666666666668,
+                "std_returns": 3.344984383734303
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.87810954117515,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 234.95243622570231,
+                    "high_win_rate_bonus": 19.150851884998325,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 9.864417542259732
+                },
+                "avg_returns": -2.7615346012168085,
+                "avg_win_rate": 0.5606060606060607,
+                "avg_num_trades": 16.0,
+                "std_returns": 3.280323365992005
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 60.436345271290016,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.8309242230230605,
+                "avg_win_rate": 0.42147034252297405,
+                "avg_num_trades": 14.666666666666666,
+                "std_returns": 5.797592226082664
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 82.37788131961489,
+                    "stop_loss_penalty": 40.10609166696925,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 3.074174839257649
+                },
+                "avg_returns": -2.843798769066355,
+                "avg_win_rate": 0.4284722222222222,
+                "avg_num_trades": 20.333333333333332,
+                "std_returns": 1.8137157045001282
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 241.48189908303516,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 7.18143793447409
+                },
+                "avg_returns": -3.5003641380430417,
+                "avg_win_rate": 0.3465608465608465,
+                "avg_num_trades": 16.0,
+                "std_returns": 3.3673020423302504
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 31.059759493803192,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 179.82425542232252,
+                    "high_win_rate_bonus": 12.772768038804637,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 7.18143793447409
+                },
+                "avg_returns": -3.66492825482402,
+                "avg_win_rate": 0.34682539682539676,
+                "avg_num_trades": 20.0,
+                "std_returns": 3.2779158478932064
+            }
+        ]
+    },
+    {
+        "generation": 4,
+        "best_score": 1.7273812824394614,
+        "best_params": {
+            "portfolio_change_multiplier": 82.37788131961489,
+            "stop_loss_penalty": 40.10609166696925,
+            "take_profit_reward": 20.006528203054028,
+            "excessive_trade_base_penalty": 225.6111274875302,
+            "high_win_rate_bonus": 24.459844718406025,
+            "win_rate_window": 15,
+            "holding_reward_multiplier": 2.582935688588461
+        },
+        "all_results": [
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": 0.8481080009473528,
+                "avg_win_rate": 0.4906015037593985,
+                "avg_num_trades": 27.333333333333332,
+                "std_returns": 3.2263468559549673
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 73.46844284492856,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.0267607905998264
+                },
+                "avg_returns": -0.5344769804719666,
+                "avg_win_rate": 0.5092592592592592,
+                "avg_num_trades": 27.333333333333332,
+                "std_returns": 4.064450222417157
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 26.512301490257066,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 17.1647482509603,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -0.5571914725790155,
+                "avg_win_rate": 0.5303454715219421,
+                "avg_num_trades": 24.666666666666668,
+                "std_returns": 4.928602634450563
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 73.46844284492856,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.0267607905998264
+                },
+                "avg_returns": -0.8492630084508347,
+                "avg_win_rate": 0.5762626262626264,
+                "avg_num_trades": 14.333333333333334,
+                "std_returns": 3.495571989869036
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 26.512301490257066,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -1.1064646636630524,
+                "avg_win_rate": 0.5084967320261438,
+                "avg_num_trades": 17.666666666666668,
+                "std_returns": 6.81969371301946
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 62.27275145909691,
+                    "take_profit_reward": 16.196162301367668,
+                    "excessive_trade_base_penalty": 259.77575176746575,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 2.524919945646854
+                },
+                "avg_returns": -1.552489860212839,
+                "avg_win_rate": 0.4456571536367801,
+                "avg_num_trades": 23.666666666666668,
+                "std_returns": 3.4113036819221176
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 313.30907024625145,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 20,
+                    "holding_reward_multiplier": 5.943713836546551
+                },
+                "avg_returns": -2.537099159723821,
+                "avg_win_rate": 0.35555555555555557,
+                "avg_num_trades": 20.0,
+                "std_returns": 5.438495093450384
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 18.005887647427937,
+                    "take_profit_reward": 73.46844284492856,
+                    "excessive_trade_base_penalty": 337.6068010562777,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.0267607905998264
+                },
+                "avg_returns": -2.7374106410158614,
+                "avg_win_rate": 0.4176587301587302,
+                "avg_num_trades": 21.666666666666668,
+                "std_returns": 5.967311837750597
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.87810954117515,
+                    "stop_loss_penalty": 62.27275145909691,
+                    "take_profit_reward": 20.006528203054028,
+                    "excessive_trade_base_penalty": 201.939616277731,
+                    "high_win_rate_bonus": 19.150851884998325,
+                    "win_rate_window": 8,
+                    "holding_reward_multiplier": 5.598056631711039
+                },
+                "avg_returns": -3.1032193819366873,
+                "avg_win_rate": 0.37083333333333335,
+                "avg_num_trades": 24.666666666666668,
+                "std_returns": 1.7888685091514913
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 263.87810954117515,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 16.020929056440423,
+                    "excessive_trade_base_penalty": 201.939616277731,
+                    "high_win_rate_bonus": 19.150851884998325,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 5.394169574453744
+                },
+                "avg_returns": -5.657543082081356,
+                "avg_win_rate": 0.3761449621664676,
+                "avg_num_trades": 20.666666666666668,
+                "std_returns": 1.3156596030738301
+            }
+        ]
+    },
+    {
+        "generation": 5,
+        "best_score": 1.7273812824394614,
+        "best_params": {
+            "portfolio_change_multiplier": 82.37788131961489,
+            "stop_loss_penalty": 40.10609166696925,
+            "take_profit_reward": 20.006528203054028,
+            "excessive_trade_base_penalty": 225.6111274875302,
+            "high_win_rate_bonus": 24.459844718406025,
+            "win_rate_window": 15,
+            "holding_reward_multiplier": 2.582935688588461
+        },
+        "all_results": [
+            {
+                "params": {
+                    "portfolio_change_multiplier": 135.77867299961227,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 117.41402529901134,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 1.7271627831874008
+                },
+                "avg_returns": -0.31449563786924645,
+                "avg_win_rate": 0.48605805958747134,
+                "avg_num_trades": 24.333333333333332,
+                "std_returns": 2.805774708226242
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 169.97734364380884,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 17.1647482509603,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -1.1020977326101942,
+                "avg_win_rate": 0.5492063492063491,
+                "avg_num_trades": 18.0,
+                "std_returns": 3.076580534318641
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 26.512301490257066,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 17.1647482509603,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 3.484738058177435
+                },
+                "avg_returns": -1.9868722288850948,
+                "avg_win_rate": 0.41016144349477685,
+                "avg_num_trades": 27.666666666666668,
+                "std_returns": 0.2721873390849618
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 31.64662940217826,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.2246914732045115,
+                "avg_win_rate": 0.47359307359307357,
+                "avg_num_trades": 22.0,
+                "std_returns": 2.973221008714568
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 35.516940831726814,
+                    "take_profit_reward": 73.46844284492856,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.0267607905998264
+                },
+                "avg_returns": -2.2815426970984,
+                "avg_win_rate": 0.4615384615384615,
+                "avg_num_trades": 19.333333333333332,
+                "std_returns": 4.9567906172144
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -2.2853806092976865,
+                "avg_win_rate": 0.5714285714285715,
+                "avg_num_trades": 14.333333333333334,
+                "std_returns": 5.245545901691545
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 20.120652774696016,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.0347640659135737
+                },
+                "avg_returns": -2.5761140230398634,
+                "avg_win_rate": 0.5,
+                "avg_num_trades": 22.0,
+                "std_returns": 5.002104714927309
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 39.15678044212395,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 225.6111274875302,
+                    "high_win_rate_bonus": 16.71111859323311,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -3.0764119376032313,
+                "avg_win_rate": 0.2806372549019608,
+                "avg_num_trades": 18.0,
+                "std_returns": 3.0350831134001175
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 42.51674251064791,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 16,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -3.4883001941842906,
+                "avg_win_rate": 0.3924242424242424,
+                "avg_num_trades": 14.0,
+                "std_returns": 3.4896739843600697
+            },
+            {
+                "params": {
+                    "portfolio_change_multiplier": 173.37038521591,
+                    "stop_loss_penalty": 19.589815155733042,
+                    "take_profit_reward": 49.43601824336693,
+                    "excessive_trade_base_penalty": 229.08454183421955,
+                    "high_win_rate_bonus": 24.459844718406025,
+                    "win_rate_window": 15,
+                    "holding_reward_multiplier": 2.582935688588461
+                },
+                "avg_returns": -4.716628713417588,
+                "avg_win_rate": 0.42239858906525574,
+                "avg_num_trades": 17.333333333333332,
+                "std_returns": 3.020763475586006
+            }
+        ]
+    }
+]

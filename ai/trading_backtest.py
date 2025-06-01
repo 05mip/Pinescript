@@ -2,71 +2,84 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from stable_baselines3 import PPO
-from trading_ai import TradingEnvironment
+from trading_ai import TradingEnvironment, fetch_data
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import time
 
-def load_model(model_path="trading_model"):
+def load_model(model_path="ai/trading_model"):
     """Load the trained model"""
     return PPO.load(model_path)
 
-def backtest(model, start_date, end_date=None, initial_balance=10000):
-    """Backtest the model on historical data"""
-    # Fetch data for backtesting
-    ticker = yf.Ticker('XRP-USD')
-    df = ticker.history(start=start_date, end=end_date, interval='15m')
-    df = df.dropna()
-    
+def backtest(model, start_date, end_date):
+    """Run backtest on the model"""
+    # Fetch data for backtest period
+    df = fetch_data(start_date=start_date, end_date=end_date)
     print(f"\nBacktest Period: {df.index[0]} to {df.index[-1]}")
     print(f"Number of candles: {len(df)}")
     
     # Create environment
-    env = TradingEnvironment(df, initial_balance=initial_balance)
+    env = TradingEnvironment(df)
     
-    # Run backtest
-    obs = env.reset()
-    done = False
-    actions = []
+    # Initialize tracking variables
+    total_trades = 0
+    winning_trades = 0
+    total_profit = 0
+    max_drawdown = 0
+    current_drawdown = 0
+    peak_value = env.initial_balance
+    
+    # Initialize lists for plotting
     portfolio_values = []
     returns = []
     prices = []
+    actions = []
+    
+    # Run backtest
+    obs, _ = env.reset()  # Unpack observation and info
+    done = False
     
     while not done:
         action, _ = model.predict(obs)
-        obs, reward, done, _ = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
+        done = terminated or truncated
         
-        actions.append(action)
+        # Store data for plotting
         portfolio_values.append(env.total_value)
         returns.append(env.returns)
         prices.append(env.df['Close'].iloc[env.current_step])
+        actions.append(action)
+        
+        # Update statistics
+        if info.get('trade_executed', False):
+            total_trades += 1
+            if info.get('trade_profit', 0) > 0:
+                winning_trades += 1
+            total_profit += info.get('trade_profit', 0)
+        
+        # Update drawdown
+        current_value = env.total_value
+        if current_value > peak_value:
+            peak_value = current_value
+        current_drawdown = (peak_value - current_value) / peak_value
+        max_drawdown = max(max_drawdown, current_drawdown)
     
-    # Calculate performance metrics
-    portfolio_values = np.array(portfolio_values)
-    returns = np.array(returns)
-    prices = np.array(prices)
+    # Calculate statistics
+    win_rate = winning_trades / total_trades if total_trades > 0 else 0
+    total_return = (env.total_value - env.initial_balance) / env.initial_balance
     
-    # Print action distribution
-    action_counts = np.bincount(actions)
-    print("\nAction Distribution:")
-    print(f"Hold: {action_counts[0] if 0 < len(action_counts) else 0}")
-    print(f"Buy: {action_counts[1] if 1 < len(action_counts) else 0}")
-    print(f"Sell: {action_counts[2] if 2 < len(action_counts) else 0}")
-    
-    # Calculate metrics
-    total_return = (portfolio_values[-1] - initial_balance) / initial_balance * 100
-    
-    # Handle edge cases for Sharpe ratio calculation
-    if len(returns) > 1 and np.std(returns) != 0:
-        sharpe_ratio = np.mean(returns) / np.std(returns) * np.sqrt(252 * 24 * 4)  # Annualized
-    else:
-        sharpe_ratio = 0
-        print("\nWarning: Could not calculate Sharpe ratio (insufficient data or zero variance)")
-    
-    max_drawdown = np.min(returns) * 100 if len(returns) > 0 else 0
+    # Print results
+    print("\nBacktest Results:")
+    print(f"Total Trades: {total_trades}")
+    print(f"Winning Trades: {winning_trades}")
+    print(f"Win Rate: {win_rate:.2%}")
+    print(f"Total Profit: ${total_profit:.2f}")
+    print(f"Total Return: {total_return:.2%}")
+    print(f"Maximum Drawdown: {max_drawdown:.2%}")
+    print(f"Final Portfolio Value: ${env.total_value:.2f}")
     
     # Plot results
-    plt.figure(figsize=(15, 15))
+    plt.figure(figsize=(15, 12))
     
     # Plot portfolio value
     plt.subplot(3, 1, 1)
@@ -74,45 +87,48 @@ def backtest(model, start_date, end_date=None, initial_balance=10000):
     plt.title('Portfolio Value Over Time')
     plt.xlabel('Date')
     plt.ylabel('Portfolio Value ($)')
+    plt.grid(True)
     
     # Plot returns
     plt.subplot(3, 1, 2)
-    plt.plot(df.index[:len(returns)], returns * 100)
+    plt.plot(df.index[:len(returns)], [r * 100 for r in returns])
     plt.title('Returns Over Time')
     plt.xlabel('Date')
     plt.ylabel('Returns (%)')
+    plt.grid(True)
     
-    # Plot price
+    # Plot price and actions
     plt.subplot(3, 1, 3)
-    plt.plot(df.index[:len(prices)], prices)
-    plt.title('XRP Price Over Time')
+    plt.plot(df.index[:len(prices)], prices, label='Price')
+    
+    # Plot buy/sell signals
+    buy_signals = [i for i, a in enumerate(actions) if a == 1]
+    sell_signals = [i for i, a in enumerate(actions) if a == 2]
+    
+    if buy_signals:
+        plt.scatter(df.index[buy_signals], [prices[i] for i in buy_signals], 
+                   color='green', marker='^', label='Buy Signal')
+    if sell_signals:
+        plt.scatter(df.index[sell_signals], [prices[i] for i in sell_signals], 
+                   color='red', marker='v', label='Sell Signal')
+    
+    plt.title('XRP Price and Trading Signals')
     plt.xlabel('Date')
     plt.ylabel('Price ($)')
+    plt.legend()
+    plt.grid(True)
     
     plt.tight_layout()
-    plt.savefig('backtest_results.png')
-    
-    print(f"\nBacktest Results:")
-    print(f"Total Return: {total_return:.2f}%")
-    print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
-    print(f"Maximum Drawdown: {max_drawdown:.2f}%")
-    print(f"Final Portfolio Value: ${portfolio_values[-1]:.2f}")
-    print(f"Initial Portfolio Value: ${portfolio_values[0]:.2f}")
-    
-    # Add trade statistics
-    buy_trades = sum(1 for action in actions if action == 1)
-    sell_trades = sum(1 for action in actions if action == 2)
-    print(f"\nTrade Statistics:")
-    print(f"Total Number of Trades: {buy_trades + sell_trades}")
-    print(f"Buy Trades: {buy_trades}")
-    print(f"Sell Trades: {sell_trades}")
-    print(f"Average Trades per Day: {(buy_trades + sell_trades) / ((df.index[-1] - df.index[0]).days + 1):.2f}")
+    plt.show()
     
     return {
+        'total_trades': total_trades,
+        'winning_trades': winning_trades,
+        'win_rate': win_rate,
+        'total_profit': total_profit,
         'total_return': total_return,
-        'sharpe_ratio': sharpe_ratio,
         'max_drawdown': max_drawdown,
-        'final_value': portfolio_values[-1],
+        'final_value': env.total_value,
         'portfolio_values': portfolio_values,
         'returns': returns,
         'prices': prices,

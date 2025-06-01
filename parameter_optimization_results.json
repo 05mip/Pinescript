@@ -1,0 +1,122 @@
+[
+    {
+        "params": {
+            "portfolio_change_multiplier": 100,
+            "stop_loss_penalty": 10,
+            "take_profit_reward": 20,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 2459.9321326143067,
+        "avg_returns": -4.421697843936175,
+        "avg_win_rate": 0.4102792632204397,
+        "avg_num_trades": 66.66666666666667,
+        "std_returns": 4.078260058224885
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 100,
+            "stop_loss_penalty": 10,
+            "take_profit_reward": 10,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 4060.4385722230727,
+        "avg_returns": -4.81256283249643,
+        "avg_win_rate": 0.45648067210567217,
+        "avg_num_trades": 65.0,
+        "std_returns": 1.3650678251063073
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 100,
+            "stop_loss_penalty": 20,
+            "take_profit_reward": 10,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 1884.4538760656949,
+        "avg_returns": -5.703311346041635,
+        "avg_win_rate": 0.42830983969043673,
+        "avg_num_trades": 64.66666666666667,
+        "std_returns": 2.564293191072327
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 100,
+            "stop_loss_penalty": 20,
+            "take_profit_reward": 20,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 2705.729657397902,
+        "avg_returns": -5.880023818050188,
+        "avg_win_rate": 0.41081676161185476,
+        "avg_num_trades": 66.0,
+        "std_returns": 3.8137948551534455
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 50,
+            "stop_loss_penalty": 20,
+            "take_profit_reward": 10,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 2394.683305475779,
+        "avg_returns": -6.444239315607181,
+        "avg_win_rate": 0.40844909650879796,
+        "avg_num_trades": 67.66666666666667,
+        "std_returns": 4.810358276661494
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 50,
+            "stop_loss_penalty": 20,
+            "take_profit_reward": 20,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 1128.7127692769363,
+        "avg_returns": -7.932614974965909,
+        "avg_win_rate": 0.4215686274509804,
+        "avg_num_trades": 62.333333333333336,
+        "std_returns": 5.180264385431327
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 50,
+            "stop_loss_penalty": 10,
+            "take_profit_reward": 20,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 1718.1708625678173,
+        "avg_returns": -8.604605017380376,
+        "avg_win_rate": 0.3729657339898971,
+        "avg_num_trades": 68.0,
+        "std_returns": 5.106888089831266
+    },
+    {
+        "params": {
+            "portfolio_change_multiplier": 50,
+            "stop_loss_penalty": 10,
+            "take_profit_reward": 10,
+            "excessive_trade_base_penalty": 50,
+            "high_win_rate_bonus": 10,
+            "win_rate_window": 10
+        },
+        "avg_total_reward": 2574.2541978919294,
+        "avg_returns": -9.187968347605613,
+        "avg_win_rate": 0.3806422433288105,
+        "avg_num_trades": 64.33333333333333,
+        "std_returns": 1.7845908103591528
+    }
+]

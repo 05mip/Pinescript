@@ -40,13 +40,13 @@ def calculate_rsi(df, period=14):
 
 class TradingEnvironment(gym.Env):
     def __init__(self, df, initial_balance=10000, transaction_fee=0.001,
-                 portfolio_change_multiplier=100,
-                 stop_loss_penalty=10,
-                 take_profit_reward=10,
-                 excessive_trade_base_penalty=50,
-                 high_win_rate_bonus=10,
-                 win_rate_window=10,
-                 holding_reward_multiplier=5):
+                 portfolio_change_multiplier=82.378,
+                 stop_loss_penalty=40.106,
+                 take_profit_reward=20.007,
+                 excessive_trade_base_penalty=225.611,
+                 high_win_rate_bonus=24.45,
+                 win_rate_window=15,
+                 holding_reward_multiplier=2.5):
         super().__init__()
         
         # Reward parameters
@@ -103,7 +103,7 @@ class TradingEnvironment(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf, 
             high=np.inf, 
-            shape=(12,),  # Added HA_Trend and RSI_Trend
+            shape=(12,),  # Keep 12 dimensions to match trained model
             dtype=np.float32
         )
         
@@ -115,7 +115,7 @@ class TradingEnvironment(gym.Env):
         
         self.current_step = 0
         self.balance = float(self.initial_balance)
-        self.position = 0.0
+        self.position = None  # None: no position, 'long': in long position
         self.total_value = float(self.balance)
         self.returns = 0.0
         self.last_trade_price = 0.0
@@ -148,14 +148,13 @@ class TradingEnvironment(gym.Env):
         ha_trend = float(self.df['HA_Trend'].iloc[self.current_step])
         rsi_trend = float(self.df['RSI_Trend'].iloc[self.current_step])
         
-        # Handle NaN values
-        rsi = rsi if not np.isnan(rsi) else 50.0
+        # Convert position to numeric value
+        position_value = 1 if self.position == 'long' else 0
         
         observation = np.array([
             price / 1000.0,  # Normalize price
             volume / 1e6,    # Normalize volume
-            self.balance / self.initial_balance,  # Balance ratio
-            self.position * price / self.initial_balance,  # Position value ratio
+            position_value,
             self.returns,
             rsi / 100.0,     # Normalize RSI to 0-1
             ha_open / 1000.0,
@@ -163,7 +162,8 @@ class TradingEnvironment(gym.Env):
             ha_high / 1000.0,
             ha_low / 1000.0,
             ha_trend,
-            rsi_trend
+            rsi_trend,
+            self.balance / self.initial_balance  # Normalized balance
         ], dtype=np.float32)
         
         # Replace any remaining NaN or inf values
@@ -199,7 +199,7 @@ class TradingEnvironment(gym.Env):
             can_trade = False
         
         # Check stop loss and take profit if in position
-        if self.position > 0:
+        if self.position == 'long':
             price_change = (current_price - self.entry_price) / self.entry_price
             
             # Stop loss
@@ -217,7 +217,7 @@ class TradingEnvironment(gym.Env):
         trade_executed = False
         
         if action == 1 and can_trade:  # Buy
-            if self.balance > 0 and self.position == 0:  # Only buy if no position
+            if self.position is None:  # Only buy if no position
                 # Calculate position size based on max_position_size
                 max_position_value = self.total_value * self.max_position_size
                 max_shares = max_position_value / current_price
@@ -230,7 +230,7 @@ class TradingEnvironment(gym.Env):
                     cost = shares_to_buy * current_price * (1 + self.transaction_fee)
                     
                     if cost <= self.balance:
-                        self.position = shares_to_buy
+                        self.position = 'long'
                         self.balance -= cost
                         self.last_trade_price = current_price
                         self.entry_price = current_price
@@ -241,12 +241,14 @@ class TradingEnvironment(gym.Env):
                         trade_executed = True
                         
         elif action == 2 and can_trade:  # Sell
-            if self.position > 0:  # Only sell if holding position
+            if self.position == 'long':  # Only sell if holding position
                 # Check minimum holding period
                 if (self.current_step - self.last_trade_step) < self.min_hold_period:
                     return self._get_observation(), -1.0, False, False, {}  # Penalty for early selling
                 
-                shares_to_sell = self.position
+                # Calculate position value
+                position_value = self.balance * self.max_position_size  # Use max position size as reference
+                shares_to_sell = position_value / current_price
                 revenue = shares_to_sell * current_price * (1 - self.transaction_fee)
                 
                 # Calculate trade profit
@@ -262,7 +264,7 @@ class TradingEnvironment(gym.Env):
                 })
                 
                 self.balance += revenue
-                self.position = 0
+                self.position = None
                 self.last_trade_price = current_price
                 self.entry_price = 0
                 self.trades.append(('SELL', current_price, shares_to_sell, self.current_step))
@@ -276,7 +278,7 @@ class TradingEnvironment(gym.Env):
                     self.loss_cooldown = 12  # 3-hour cooldown after loss
         
         # Calculate total value and returns
-        position_value = self.position * current_price
+        position_value = self.balance * self.max_position_size if self.position == 'long' else 0
         self.total_value = self.balance + position_value
         self.returns = (self.total_value - self.initial_balance) / self.initial_balance
         
@@ -290,7 +292,7 @@ class TradingEnvironment(gym.Env):
             
             # Transaction cost penalty
             if trade_executed:
-                transaction_cost = abs(self.position * current_price * self.transaction_fee)
+                transaction_cost = abs(position_value * self.transaction_fee)
                 reward -= transaction_cost * 10  # Penalize transaction costs
             
             # Add exponential penalty for excessive trading
@@ -301,7 +303,7 @@ class TradingEnvironment(gym.Env):
                 print(f"Excessive trading penalty: -{penalty:.2f} (Daily trades: {self.daily_trades})")
             
             # Reward holding profitable positions
-            if self.position > 0:
+            if self.position == 'long':
                 unrealized_profit = (current_price - self.entry_price) / self.entry_price
                 if unrealized_profit > 0:
                     reward += unrealized_profit * self.holding_reward_multiplier
@@ -336,10 +338,16 @@ class TradingEnvironment(gym.Env):
         
         return self._get_observation(), reward, done, False, info
 
-def fetch_data(symbol='XRP-USD', period='max', interval='15m'):
+def fetch_data(symbol='XRP-USD', start_date=None, end_date=None, interval='15m'):
     """Fetch data from yfinance with 15-minute candles"""
     ticker = yf.Ticker(symbol)
-    df = ticker.history(start=datetime.now() - timedelta(days=59), end=datetime.now(), interval=interval)
+    
+    if start_date is None:
+        start_date = datetime.now() - timedelta(days=59)
+    if end_date is None:
+        end_date = datetime.now()
+        
+    df = ticker.history(start=start_date, end=end_date, interval=interval)
     
     # Ensure the index is datetime
     df.index = pd.to_datetime(df.index)
@@ -354,10 +362,10 @@ def train_model(df, total_timesteps=100000):
     """Train the trading model"""
     print(f"Training with {len(df)} data points")
     
-    # Use SyncVectorEnv for gymnasium compatibility
-    env = SyncVectorEnv([lambda: TradingEnvironment(df)])
+    # Create environment
+    env = TradingEnvironment(df)
     
-    # Better PPO parameters
+    # Train model
     model = PPO(
         'MlpPolicy', 
         env, 
@@ -368,7 +376,7 @@ def train_model(df, total_timesteps=100000):
         n_epochs=10,
         gamma=0.99,
         ent_coef=0.01,  # Encourage exploration
-        # device='cpu',  # Uncomment to force CPU for MLP policies (may be faster than GPU)
+        device='cpu'  # Force CPU for MLP policies
     )
     
     model.learn(total_timesteps=total_timesteps)
@@ -391,7 +399,7 @@ def main():
     # Quick test to verify trades
     print("\n=== TESTING MODEL ===")
     test_env = TradingEnvironment(df[-100:])  # Test on last 100 steps
-    obs = test_env.reset()
+    obs, _ = test_env.reset()  # Unpack observation and info
     
     for i in range(50):
         action, _ = model.predict(obs)
