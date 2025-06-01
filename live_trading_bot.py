@@ -10,7 +10,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import undetected_chromedriver as uc
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 import logging
 import pytz
 import os
@@ -193,16 +194,34 @@ class LiveTrader:
         os.makedirs(chrome_profile_dir, exist_ok=True)
         
         # Add more Chrome options for stability
-        options = uc.ChromeOptions()
+        options = Options()
         options.add_argument(f'--user-data-dir={chrome_profile_dir}')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
         options.add_argument('--disable-extensions')
         options.add_argument('--disable-software-rasterizer')
+        # Add additional options to handle GPU and network issues
+        options.add_argument('--disable-gpu-sandbox')
+        options.add_argument('--disable-software-rasterizer')
+        options.add_argument('--disable-webgl')
+        options.add_argument('--disable-webgl2')
+        options.add_argument('--disable-features=NetworkService')
+        options.add_argument('--dns-prefetch-disable')
+        options.add_argument('--disable-background-networking')
+        options.add_argument('--disable-default-apps')
+        options.add_argument('--disable-sync')
+        options.add_argument('--disable-translate')
+        options.add_argument('--metrics-recording-only')
+        options.add_argument('--mute-audio')
+        options.add_argument('--no-first-run')
+        options.add_argument('--safebrowsing-disable-auto-update')
+        options.add_argument('--password-store=basic')
+        options.add_argument('--use-mock-keychain')
+        options.add_argument('--disable-features=IsolateOrigins,site-per-process')
         
         try:
-            self.driver = uc.Chrome(options=options)
+            self.driver = webdriver.Chrome(options=options)
             self.driver.get("https://www.pionex.us/")
             self.driver.maximize_window()
             
