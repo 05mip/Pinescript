@@ -18,6 +18,7 @@ import pytz
 import os
 import pickle
 import requests
+import base64
 from scipy.signal import butter, filtfilt
 
 # Configure logging
@@ -280,7 +281,6 @@ class LiveTrader:
                 qr_data_url = self.driver.execute_script(
                     "return arguments[0].toDataURL('image/png');", qr_canvas
                 )
-                import base64
                 qr_base64 = qr_data_url.split(',')[1]
                 qr_bytes = base64.b64decode(qr_base64)
                 with open("pionex_login_qr.png", "wb") as f:
@@ -297,14 +297,14 @@ class LiveTrader:
                 self.driver.get("https://www.pionex.us/en-US/trade/XRP_USD/Manual")
                 logging.info("Navigated to trading panel.")
 
-            window_size = self.driver.get_window_size()
-            mid_x = window_size['width'] // 2
-            mid_y = window_size['height'] // 2
+                window_size = self.driver.get_window_size()
+                mid_x = window_size['width'] // 2
+                mid_y = window_size['height'] // 2
 
-            actions = ActionChains(self.driver)
-            for _ in range(3):
-                actions.move_by_offset(mid_x, mid_y).click().perform()
-                actions.move_by_offset(-mid_x, -mid_y)  # Reset mouse position to avoid offset stacking
+                actions = ActionChains(self.driver)
+                for _ in range(3):
+                    actions.move_by_offset(mid_x, mid_y).click().perform()
+                    actions.move_by_offset(-mid_x, -mid_y)  # Reset mouse position to avoid offset stacking
             except Exception as e:
                 logging.error(f"Timeout or error waiting for login: {e}")
                 raise Exception("Login was not detected in time. Please try again.")

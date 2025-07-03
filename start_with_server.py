@@ -17,7 +17,6 @@ server_thread.start()
 trader = live_trading_bot.LiveTrader()
 try:
     trader.run()
-    data = trader.fetch_live_data()
 except KeyboardInterrupt:
     logging.info("\nShutting down trading bot...")
 finally:
