@@ -12,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 import logging
 import pytz
 import os
@@ -271,44 +272,43 @@ class LiveTrader:
             self.driver.get("https://www.pionex.us/")
             self.driver.maximize_window()
             
-            # Try to load cookies if they exist
-            if os.path.exists(self.cookies_file):
-                try:
-                    cookies = pickle.load(open(self.cookies_file, "rb"))
-                    for cookie in cookies:
-                        # Firefox requires domain to be set for cookies
-                        if 'domain' not in cookie:
-                            cookie['domain'] = '.pionex.us'
-                        self.driver.add_cookie(cookie)
-                    self.driver.refresh()
-                    logging.info("Loaded saved cookies")
-                    self.driver.get("https://www.pionex.us/en-US/trade/XRP_USD/Manual")
-                    # Wait a bit to see if we're actually logged in
-                    time.sleep(3)
-                    
-                    # Check if we're logged in by looking for elements that are only visible when logged in
-                    try:
-                        WebDriverWait(self.driver, 5).until(
-                            EC.presence_of_element_located((By.XPATH, "//div[@role='tab' and text()='Buy']"))
-                        )
-                        logging.info("Successfully logged in using saved cookies")
-                        return
-                    except:
-                        logging.info("Saved cookies expired or invalid, need to log in manually")
-                except Exception as e:
-                    logging.error(f"Error loading cookies: {str(e)}")
-            
-            # If we get here, we need to log in manually
-            input("Log in to Pionex, navigate to the trading panel, and then press Enter to continue...")
-            
-            # Save cookies after successful login
+            self.driver.get("https://accounts.pionex.us/en/sign")
             try:
-                cookies = self.driver.get_cookies()
-                pickle.dump(cookies, open(self.cookies_file, "wb"))
-                logging.info("Saved new cookies")
+                qr_canvas = WebDriverWait(self.driver, 15).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(@class, 'qrCodeBox')]/div/div/canvas"))
+                )
+                qr_data_url = self.driver.execute_script(
+                    "return arguments[0].toDataURL('image/png');", qr_canvas
+                )
+                import base64
+                qr_base64 = qr_data_url.split(',')[1]
+                qr_bytes = base64.b64decode(qr_base64)
+                with open("pionex_login_qr.png", "wb") as f:
+                    f.write(qr_bytes)
+                print("Saved QR code as pionex_login_qr.png")
             except Exception as e:
-                logging.error(f"Error saving cookies: {str(e)}")
-                
+                print(f"Could not save QR code: {e}")
+            # Wait for the URL to change after QR code scan, then navigate to trading panel
+            try:
+                WebDriverWait(self.driver, 120).until(
+                    lambda d: d.current_url != "https://accounts.pionex.us/en/sign"
+                )
+                logging.info(f"Login detected.")
+                self.driver.get("https://www.pionex.us/en-US/trade/XRP_USD/Manual")
+                logging.info("Navigated to trading panel.")
+
+            window_size = self.driver.get_window_size()
+            mid_x = window_size['width'] // 2
+            mid_y = window_size['height'] // 2
+
+            actions = ActionChains(self.driver)
+            for _ in range(3):
+                actions.move_by_offset(mid_x, mid_y).click().perform()
+                actions.move_by_offset(-mid_x, -mid_y)  # Reset mouse position to avoid offset stacking
+            except Exception as e:
+                logging.error(f"Timeout or error waiting for login: {e}")
+                raise Exception("Login was not detected in time. Please try again.")
+            
         except Exception as e:
             logging.error(f"Failed to initialize Firefox driver: {str(e)}")
             if self.driver:
@@ -463,12 +463,6 @@ class LiveTrader:
             # Convert all columns to numeric types
             df = df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
 
-            # Save live data to CSV with timestamp
-            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-            csv_filename = f"live_data_{self.symbol}_{timestamp_str}.csv"
-            df.to_csv(csv_filename)
-            logging.info(f"Live data saved to {csv_filename}")
-
             return df
 
         except Exception as e:
@@ -542,7 +536,7 @@ class LiveTrader:
 if __name__ == "__main__":
     trader = LiveTrader()
     try:
-        # trader.run()
+        trader.run()
         data = trader.fetch_live_data()
     except KeyboardInterrupt:
         logging.info("\nShutting down trading bot...")
