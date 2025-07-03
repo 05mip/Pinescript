@@ -17,6 +17,7 @@ import pytz
 import os
 import pickle
 import requests
+from scipy.signal import butter, filtfilt
 
 # Configure logging
 logging.basicConfig(
@@ -40,16 +41,22 @@ class HARSIStrategy(Strategy):
     smooth_d = 3
     max_ha_cross = 10
     window = 100
-    ha_smooth_period = 2
-    last_action = None
+    ha_smooth_period = 1  # New parameter for Heikin Ashi smoothing
+
+    use_butterworth_filter = True
+    filter_order = 1
+    filter_cutoff = 0.1  # Normalized frequency (0.1 = remove fastest 90% of frequencies)
 
     def init(self):
+        self.last_action = None
+
         # Calculate Heikin Ashi values
         self.ha_close = (self.data.Open + self.data.High + self.data.Low + self.data.Close) / 4
-        self.ha_open = self.I(lambda x: x, self.data.Open)
-        self.ha_high = self.I(lambda x: x, self.data.High)
-        self.ha_low = self.I(lambda x: x, self.data.Low)
+        self.ha_open = self.I(lambda x: x, self.data.Open)  # Initialize with regular open
+        self.ha_high = self.I(lambda x: x, self.data.High)  # Initialize with regular high
+        self.ha_low = self.I(lambda x: x, self.data.Low)    # Initialize with regular low
         
+        # Calculate HA values using indicators
         def calc_ha_open(ha_open, ha_close):
             ha_open[0] = self.data.Open[0]
             for i in range(1, len(ha_open)):
@@ -69,7 +76,7 @@ class HARSIStrategy(Strategy):
         self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
         self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
         self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
-
+        
         # Apply smoothing to Heikin Ashi values
         def smooth_ha_values(values):
             smoothed = np.zeros_like(values)
@@ -83,6 +90,7 @@ class HARSIStrategy(Strategy):
         self.ha_high = self.I(smooth_ha_values, self.ha_high)
         self.ha_low = self.I(smooth_ha_values, self.ha_low)
         
+        # Calculate scaling factors
         def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
             min_val = min(ha_low[-self.window:])
             max_val = max(ha_high[-self.window:])
@@ -99,22 +107,29 @@ class HARSIStrategy(Strategy):
             calc_scaled_values, self.ha_low, self.ha_high, self.ha_open, self.ha_close
         )
         
+        # Calculate RSI and Stochastic RSI
+        # Alternative vectorized version (more efficient)
         def calc_rsi(close, period=14):
+            """
+            Vectorized RSI calculation - more efficient for large datasets
+            """
             close = np.array(close, dtype=float)
             delta = np.diff(close)
             
             gain = np.where(delta > 0, delta, 0)
             loss = np.where(delta < 0, -delta, 0)
             
+            # Use pandas-style exponential weighted mean if available
             gain_ema = pd.Series(gain).ewm(span=period, adjust=False).mean()
             loss_ema = pd.Series(loss).ewm(span=period, adjust=False).mean()
             
             rs = gain_ema / loss_ema
             rsi_values = 100 - (100 / (1 + rs))
             
+            # Pad with NaN for first value and return
             rsi = np.full(len(close), np.nan)
             rsi[1:] = rsi_values
-            rsi[:period] = np.nan
+            rsi[:period] = np.nan  # First 'period' values should be NaN
             
             return rsi
         
@@ -132,7 +147,10 @@ class HARSIStrategy(Strategy):
             return stoch_rsi
         
         self.stoch_rsi = self.I(calc_stoch_rsi, rsi)
+        if self.use_butterworth_filter:
+            self.stoch_rsi = self.I(self.butterworth_filter, self.stoch_rsi)
         
+        # Calculate K and D lines
         def calc_k(stoch_rsi):
             k = np.zeros_like(stoch_rsi)
             for i in range(len(stoch_rsi)):
@@ -154,19 +172,61 @@ class HARSIStrategy(Strategy):
         self.k = self.I(calc_k, self.stoch_rsi)
         self.d = self.I(calc_d, self.k)
         
+        # Rescale K and D from [0, 1] to [-40, 40]
         self.k_scaled = self.I(lambda k: k * 80 - 40, self.k)
         self.d_scaled = self.I(lambda d: d * 80 - 40, self.d)
 
+    def butterworth_filter(self, signal):
+        """
+        Apply Butterworth low-pass filter - simpler than FFT
+        """
+        # Need at least 3x the filter order points
+        min_length = 3 * self.filter_order
+        
+        if len(signal) < min_length:
+            return signal
+        
+        # Remove NaN values for filtering
+        valid_mask = ~np.isnan(signal)
+        if not np.any(valid_mask):
+            return signal
+        
+        valid_signal = signal[valid_mask]
+        if len(valid_signal) < min_length:
+            return signal
+        
+        # Design filter
+        b, a = butter(self.filter_order, self.filter_cutoff, btype='low')
+        
+        # Apply filter
+        try:
+            filtered_valid = filtfilt(b, a, valid_signal)
+            
+            # Reconstruct full array
+            filtered_signal = signal.copy()
+            filtered_signal[valid_mask] = filtered_valid
+            
+            return filtered_signal
+        except:
+            # If filtering fails, return original signal
+            return signal
+
     def next(self):
+        # Check if Heikin Ashi candle is green (uptrend) or red (downtrend)
         ha_green = self.ha_close_scaled[-1] > self.ha_open_scaled[-1]
         ha_red = self.ha_close_scaled[-1] < self.ha_open_scaled[-1]
         
+        # Check RSI direction
         rsi_rising = self.stoch_rsi[-1] > self.stoch_rsi[-2]
         rsi_falling = self.stoch_rsi[-1] < self.stoch_rsi[-2]
         
+        # Entry condition: RSI rising AND Heikin Ashi candle is green
         long_condition = rsi_rising and ha_green
+        
+        # Exit condition: RSI falling AND Heikin Ashi candle is red
         exit_condition = rsi_falling and ha_red
         
+        # Execute trades
         if long_condition and not self.position:
             self.buy()
             self.last_action = "BUY"
@@ -185,7 +245,7 @@ class LiveTrader:
         self.interval = '15M'
         self.last_action = None
         self.last_check_time = None
-        self.BUY_PERCENTAGE = 0.7
+        self.BUY_PERCENTAGE = 0.5
         
     def setup_driver(self):
         """Initialize the Firefox driver with saved cookies if available"""
@@ -204,7 +264,7 @@ class LiveTrader:
         options.set_preference("dom.webdriver.enabled", False)
         options.set_preference("useAutomationExtension", False)
        
-        gecko_path = "/usr/bin/geckodriver"
+        gecko_path = "geckodriver.exe"
 
         try:
             self.driver = webdriver.Firefox(service=Service(gecko_path), options=options)
@@ -311,7 +371,8 @@ class LiveTrader:
             confirm_button.click()
             logging.info("Confirmed buy order in dialog")
         except:
-            logging.info("No confirmation dialog appeared")
+            logging.info("No confirmation dialog appeared, pressing Enter.")
+            self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
             
         logging.info(f"Buy Order Placed: Bought ${amount} of XRP at approximately ${current_price:.4f} per XRP")
 
@@ -364,7 +425,8 @@ class LiveTrader:
             confirm_button.click()
             logging.info("Confirmed sell order in dialog")
         except:
-            logging.info("No confirmation dialog appeared")
+            logging.info("No confirmation dialog appeared, pressing Enter.")
+            self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
             
         logging.info(f"Sell Order Placed: Sold {balance_value} XRP at approximately ${current_price:.4f} per XRP")
 
@@ -401,6 +463,12 @@ class LiveTrader:
             # Convert all columns to numeric types
             df = df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
 
+            # Save live data to CSV with timestamp
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            csv_filename = f"live_data_{self.symbol}_{timestamp_str}.csv"
+            df.to_csv(csv_filename)
+            logging.info(f"Live data saved to {csv_filename}")
+
             return df
 
         except Exception as e:
@@ -410,7 +478,7 @@ class LiveTrader:
     def run(self):
         logging.info("Starting live trading bot...")
         self.setup_driver()  # Initialize driver with cookies
-        
+        first_sell_received = False
         while True:
             try:
                 # Get current time
@@ -434,23 +502,34 @@ class LiveTrader:
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
                 stats = bt.run()
-                # bt.plot()
+                bt.plot(filename='backtest_report.html', open_browser=False)
                 
                 # Get the last action from the strategy
-                last_action = stats['_strategy'].last_action
+                strat_action = stats['_strategy'].last_action
                 
                 # Execute trades if needed
-                if last_action == "BUY" and self.last_action != "BUY":
-                    logging.info("Buy signal detected")
-                    self.buy()
-                    self.last_action = "BUY"
-                elif last_action == "SELL" and self.last_action != "SELL":
-                    logging.info("Sell signal detected")
-                    self.sell()
-                    self.last_action = "SELL"
+                if strat_action == "SELL" and self.last_action != "SELL":
+                    if first_sell_received:
+                        logging.info("Sell signal detected")
+                        self.sell()
+                        self.last_action = "SELL"
+                    else:
+                        first_sell_received = True
+                        self.last_action = "SELL"  # Mark sell as the last action to avoid re-triggering
+                        logging.info("First sell signal received. The bot is now active and can place buy orders on the next signal.")
+                elif strat_action == "BUY" and self.last_action != "BUY":
+                    if first_sell_received:
+                        logging.info("Buy signal detected")
+                        self.buy()
+                        self.last_action = "BUY"
+                    else:
+                        logging.info("Buy signal detected, but waiting for the first sell signal before buying.")
                 
+                if not first_sell_received:
+                    logging.info("Waiting for the first sell signal to activate trading...")
+
                 logging.info(f"Strategy check completed at {current_time}")
-                
+                time.sleep(5)                
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}")
                 time.sleep(5)  # Wait 5 seconds before retrying
@@ -463,7 +542,8 @@ class LiveTrader:
 if __name__ == "__main__":
     trader = LiveTrader()
     try:
-        trader.run()
+        # trader.run()
+        data = trader.fetch_live_data()
     except KeyboardInterrupt:
         logging.info("\nShutting down trading bot...")
     finally:

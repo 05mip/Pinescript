@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import time
 import pytz
 import requests
+from scipy.fft import fft, ifft, fftfreq
+from scipy.signal import butter, filtfilt
 
 class HARSIStrategy(Strategy):
     # Strategy parameters
@@ -20,7 +22,11 @@ class HARSIStrategy(Strategy):
     smooth_d = 3
     max_ha_cross = 10
     window = 100
-    ha_smooth_period = 2  # New parameter for Heikin Ashi smoothing
+    ha_smooth_period = 1  # New parameter for Heikin Ashi smoothing
+
+    use_butterworth_filter = True
+    filter_order = 1
+    filter_cutoff = 0.1  # Normalized frequency (0.1 = remove fastest 90% of frequencies)
 
     def init(self):
         # Calculate Heikin Ashi values
@@ -120,6 +126,8 @@ class HARSIStrategy(Strategy):
             return stoch_rsi
         
         self.stoch_rsi = self.I(calc_stoch_rsi, rsi)
+        if self.use_butterworth_filter:
+            self.stoch_rsi = self.I(self.butterworth_filter, self.stoch_rsi)
         
         # Calculate K and D lines
         def calc_k(stoch_rsi):
@@ -146,6 +154,41 @@ class HARSIStrategy(Strategy):
         # Rescale K and D from [0, 1] to [-40, 40]
         self.k_scaled = self.I(lambda k: k * 80 - 40, self.k)
         self.d_scaled = self.I(lambda d: d * 80 - 40, self.d)
+
+    def butterworth_filter(self, signal):
+        """
+        Apply Butterworth low-pass filter - simpler than FFT
+        """
+        # Need at least 3x the filter order points
+        min_length = 3 * self.filter_order
+        
+        if len(signal) < min_length:
+            return signal
+        
+        # Remove NaN values for filtering
+        valid_mask = ~np.isnan(signal)
+        if not np.any(valid_mask):
+            return signal
+        
+        valid_signal = signal[valid_mask]
+        if len(valid_signal) < min_length:
+            return signal
+        
+        # Design filter
+        b, a = butter(self.filter_order, self.filter_cutoff, btype='low')
+        
+        # Apply filter
+        try:
+            filtered_valid = filtfilt(b, a, valid_signal)
+            
+            # Reconstruct full array
+            filtered_signal = signal.copy()
+            filtered_signal[valid_mask] = filtered_valid
+            
+            return filtered_signal
+        except:
+            # If filtering fails, return original signal
+            return signal
 
     def next(self):
         # Check if Heikin Ashi candle is green (uptrend) or red (downtrend)
@@ -243,40 +286,43 @@ def fetch_data_from_pionex(symbol="XRP_USDT", interval="15M", limit=500):
         print("Error fetching Pionex data:", e)
         return None
 
+def fetch_from_file():
+    df = pd.read_csv('data.csv', parse_dates=['timestamp'])
+    df.set_index('timestamp', inplace=True)
+    return df
+
 if __name__ == '__main__':
     # Example usage with yfinance
-    symbol = 'XRP_USDT'
-    # symbol = 'XRP-USD'
+    # symbol = 'XRP_USDT'
+    symbol = 'XRP-USD'
+    # symbol = 'SOXL'
     end_date = datetime.now()
     start_date = end_date - timedelta(days=59)  # 59 days of data
     
     print(f"Fetching data for {symbol}...")
     # Fetch data with retry mechanism
-    # data = fetch_data(symbol, start_date, end_date)
-    data = fetch_data_from_pionex(symbol)
+    data = fetch_data(symbol, start_date, end_date)
+    # data = fetch_data_from_pionex(symbol)
+    # data = fetch_from_file()
     
     if data is not None and not data.empty:
         print(f"Successfully fetched {len(data)} data points")
         # Run backtest
         bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001)
         stats = bt.run()
+        print(stats)
         
-        # Print results
-        print("\nBacktest Results:")
-        print(f"Total Return: {stats['Return [%]']:.2f}%")
-        print(f"Buy & Hold Return: {stats['Buy & Hold Return [%]']:.2f}%")
-        print(f"Max. Drawdown: {stats['Max. Drawdown [%]']:.2f}%")
-        print(f"# Trades: {stats['# Trades']}")
-        print(f"Win Rate: {stats['Win Rate [%]']:.2f}%")
         
         # data.to_csv('data.csv')
 
-        # Export last 30 trades to CSV
-        trades = stats['_trades']
-        csv_filename = f'trades.csv'
-        trades.to_csv(csv_filename)
-        print(f"\nExported trades to {csv_filename}")
+        # Export trades to CSV
+        # trades = stats['_trades']
+        # csv_filename = f'trades.csv'
+        # trades.to_csv(csv_filename)
+        # print(f"\nExported trades to {csv_filename}")
         
-        bt.plot()
+        # bt.plot()
+        bt.plot(filename='backtest_report.html', open_browser=True)
+
     else:
         print("Failed to fetch data. Please try again later.")
