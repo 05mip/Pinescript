@@ -8,7 +8,7 @@ PORT = 8080
 def serve_qr_code_forever():
     handler = http.server.SimpleHTTPRequestHandler
     with socketserver.TCPServer(("", PORT), handler) as httpd:
-        print(f"Serving QR code at http://localhost:{PORT}/pionex_login_qr.png")
+        print(f"Serving QR code at http://100.74.60.27:{PORT}/pionex_login_qr.png")
         httpd.serve_forever()
 
 server_thread = threading.Thread(target=serve_qr_code_forever, daemon=True)
