@@ -240,14 +240,25 @@ class HARSIStrategy(Strategy):
         return None
 
 class LiveTrader:
-    def __init__(self):
+    def __init__(self, interval='15M', symbol='XRP_USDT'):
         self.cookies_file = 'pionex_cookies.pkl'
         self.driver = None
-        self.symbol = 'XRP_USDT'
-        self.interval = '15M'
+        self.symbol = symbol
+        self.interval = interval
         self.last_action = None
         self.last_check_time = None
         self.BUY_PERCENTAGE = 0.5
+        
+        # Map intervals to minutes for timing calculations
+        self.interval_minutes = {
+            '1M': 1,
+            '5M': 5,
+            '15M': 15,
+            '30M': 30,
+            '1H': 60,
+            '4H': 240,
+            '1D': 1440
+        }
         
     def setup_driver(self):
         """Initialize the Firefox driver with saved cookies if available"""
@@ -265,8 +276,15 @@ class LiveTrader:
         options.set_preference("browser.privatebrowsing.autostart", False)
         options.set_preference("dom.webdriver.enabled", False)
         options.set_preference("useAutomationExtension", False)
-       
-        gecko_path = "geckodriver.exe"
+        # options.add_argument("--headless")
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--window-size=1920,1080")
+
+        # Set geckodriver path depending on OS
+        if os.name == "nt":
+            gecko_path = "geckodriver.exe"
+        else:
+            gecko_path = "/usr/local/bin/geckodriver"
 
         try:
             self.driver = webdriver.Firefox(service=Service(gecko_path), options=options)
@@ -293,8 +311,11 @@ class LiveTrader:
                 WebDriverWait(self.driver, 120).until(
                     lambda d: d.current_url != "https://accounts.pionex.us/en/sign"
                 )
+                time.sleep(3)
                 logging.info(f"Login detected.")
-                self.driver.get("https://www.pionex.us/en-US/trade/XRP_USD/Manual")
+                # Convert symbol format from API format (XRP_USDT) to URL format (XRP_USD)
+                url_symbol = self.symbol.replace('_USDT', '_USD')
+                self.driver.get(f"https://www.pionex.us/en-US/trade/{url_symbol}/Manual")
                 logging.info("Navigated to trading panel.")
 
                 window_size = self.driver.get_window_size()
@@ -325,7 +346,7 @@ class LiveTrader:
         latest_data = self.fetch_live_data()
         if latest_data is not None and not latest_data.empty:
             current_price = latest_data['Close'].iloc[-1]
-            logging.info(f"Current XRP price (from fetched): ${current_price:.4f}")
+            logging.info(f"Current {self.symbol} price (from fetched): ${current_price:.4f}")
         else:
             logging.warning("Could not fetch current price")
         
@@ -350,7 +371,7 @@ class LiveTrader:
 
         # Calculate amount
         amount = balance_value * self.BUY_PERCENTAGE
-        # amount = 20
+        # amount = 5
         
         input_box = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
@@ -358,8 +379,10 @@ class LiveTrader:
         input_box.clear()
         input_box.send_keys(str(amount))
         
+        # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
+        base_symbol = self.symbol.split('_')[0]
         buy_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Buy XRP']]"))
+            EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Buy {base_symbol}']]"))
         )
         buy_button.click()
         
@@ -374,7 +397,7 @@ class LiveTrader:
             logging.info("No confirmation dialog appeared, pressing Enter.")
             self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
             
-        logging.info(f"Buy Order Placed: Bought ${amount} of XRP at approximately ${current_price:.4f} per XRP")
+        logging.info(f"Buy Order Placed: Bought ${amount} of {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
 
     def sell(self):
         logging.info("Placing Sell Order...")
@@ -383,7 +406,7 @@ class LiveTrader:
         latest_data = self.fetch_live_data()
         if latest_data is not None and not latest_data.empty:
             current_price = latest_data['Close'].iloc[-1]
-            logging.info(f"Current XRP price (from fetched): ${current_price:.4f}")
+            logging.info(f"Current {self.symbol} price (from fetched): ${current_price:.4f}")
         else:
             logging.warning("Could not fetch current price")
             
@@ -396,14 +419,16 @@ class LiveTrader:
         )
         market_tab.click()
         
+        # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
+        base_symbol = self.symbol.split('_')[0]
         balance_span = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((
-                By.XPATH, "//span[text()='Available balance:']/following-sibling::span[contains(text(), 'XRP')]"
+                By.XPATH, f"//span[text()='Available balance:']/following-sibling::span[contains(text(), '{base_symbol}')]"
             ))
         )
 
         balance_text = balance_span.text.strip()
-        balance_number = balance_text.replace("XRP", "").replace(",", "").strip()
+        balance_number = balance_text.replace(base_symbol, "").replace(",", "").strip()
         balance_value = float(balance_number)
         
         input_box = WebDriverWait(self.driver, 10).until(
@@ -413,7 +438,7 @@ class LiveTrader:
         input_box.send_keys(str(balance_value))
         
         sell_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[.//span[text()='Sell XRP']]"))
+            EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Sell {base_symbol}']]"))
         )
         sell_button.click()
         
@@ -428,7 +453,7 @@ class LiveTrader:
             logging.info("No confirmation dialog appeared, pressing Enter.")
             self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
             
-        logging.info(f"Sell Order Placed: Sold {balance_value} XRP at approximately ${current_price:.4f} per XRP")
+        logging.info(f"Sell Order Placed: Sold {balance_value} {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
 
     def fetch_live_data(self):
         url = "https://api.pionex.com/api/v1/market/klines"
@@ -478,12 +503,33 @@ class LiveTrader:
                 # Get current time
                 current_time = datetime.now()
                 
-                # Calculate time until next 15-minute candle open
-                minutes_to_next = 15 - (current_time.minute % 15)
+                # Calculate time until next candle open based on interval
+                interval_minutes = self.interval_minutes.get(self.interval, 15)  # Default to 15 if interval not found
+                
+                if self.interval == '1H':
+                    # For hourly intervals, wait until the start of the next hour
+                    minutes_to_next = 60 - current_time.minute
+                elif self.interval == '4H':
+                    # For 4-hour intervals, wait until the next 4-hour mark (00:00, 04:00, 08:00, etc.)
+                    current_hour = current_time.hour
+                    next_4h_mark = ((current_hour // 4) + 1) * 4
+                    if next_4h_mark >= 24:
+                        next_4h_mark = 0
+                    hours_to_next = next_4h_mark - current_hour
+                    if hours_to_next <= 0:
+                        hours_to_next += 4
+                    minutes_to_next = hours_to_next * 60 - current_time.minute
+                elif self.interval == '1D':
+                    # For daily intervals, wait until midnight
+                    minutes_to_next = (24 - current_time.hour) * 60 - current_time.minute
+                else:
+                    # For minute-based intervals (1M, 5M, 15M, 30M)
+                    minutes_to_next = interval_minutes - (current_time.minute % interval_minutes)
+                
                 seconds_to_next = minutes_to_next * 60 - current_time.second
                 
                 if seconds_to_next > 0:
-                    logging.info(f"Waiting {seconds_to_next} seconds for next candle open...")
+                    logging.info(f"Waiting {seconds_to_next} seconds for next {self.interval} candle open...")
                     time.sleep(seconds_to_next + 2)
                 
                 # Fetch latest data
@@ -492,7 +538,9 @@ class LiveTrader:
                     logging.warning("Failed to fetch data, retrying in 5 seconds...")
                     time.sleep(5)
                     continue
-                
+               
+                data = data.sort_index()
+
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
                 stats = bt.run()
@@ -534,7 +582,13 @@ class LiveTrader:
             self.driver.quit()
 
 if __name__ == "__main__":
-    trader = LiveTrader()
+    # Change these parameters to switch between different time intervals and trading pairs
+    # Available intervals: '1M', '5M', '15M', '30M', '1H', '4H', '1D'
+    # Available symbols: 'XRP_USDT', 'BTC_USDT', 'ETH_USDT', 'ADA_USDT', 'DOT_USDT', etc.
+    interval = '15M'  # Change this to your desired interval
+    symbol = 'XRP_USDT'  # Change this to your desired trading pair
+    
+    trader = LiveTrader(interval=interval, symbol=symbol)
     try:
         trader.run()
         data = trader.fetch_live_data()

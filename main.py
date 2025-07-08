@@ -212,7 +212,7 @@ class HARSIStrategy(Strategy):
         elif exit_condition and self.position:
             self.position.close()
 
-def fetch_data(symbol, start_date, end_date, interval='15m', max_retries=3, delay=2):
+def fetch_data(symbol, start_date, end_date, interval='1h', max_retries=3, delay=2):
     """
     Fetch data from Yahoo Finance with retry mechanism
     :param symbol: Stock symbol (e.g., 'AAPL')
@@ -294,7 +294,7 @@ def fetch_from_file():
 if __name__ == '__main__':
     # Example usage with yfinance
     # symbol = 'XRP_USDT'
-    symbol = 'XRP-USD'
+    symbol = 'RAY-USD'
     # symbol = 'SOXL'
     end_date = datetime.now()
     start_date = end_date - timedelta(days=59)  # 59 days of data
