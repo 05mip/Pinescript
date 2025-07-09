@@ -3,7 +3,7 @@ import http.server
 import socketserver
 import threading
 
-PORT = 8080 
+PORT = 8080
 
 def serve_qr_code_forever():
     handler = http.server.SimpleHTTPRequestHandler
@@ -14,10 +14,13 @@ def serve_qr_code_forever():
 server_thread = threading.Thread(target=serve_qr_code_forever, daemon=True)
 server_thread.start()
 
-trader = live_trading_bot.LiveTrader()
+interval = "15M"
+symbol = "RAY_USDT"
+
+trader = live_trading_bot.LiveTrader(interval=interval, symbol=symbol)
 try:
     trader.run()
 except KeyboardInterrupt:
-    logging.info("\nShutting down trading bot...")
+    print("\nShutting down trading bot...")
 finally:
-    trader.cleanup() 
+    trader.cleanup()

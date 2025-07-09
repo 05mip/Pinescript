@@ -57,28 +57,28 @@ class HARSIStrategy(Strategy):
         self.ha_open = self.I(lambda x: x, self.data.Open)  # Initialize with regular open
         self.ha_high = self.I(lambda x: x, self.data.High)  # Initialize with regular high
         self.ha_low = self.I(lambda x: x, self.data.Low)    # Initialize with regular low
-        
+
         # Calculate HA values using indicators
         def calc_ha_open(ha_open, ha_close):
             ha_open[0] = self.data.Open[0]
             for i in range(1, len(ha_open)):
                 ha_open[i] = (ha_open[i-1] + ha_close[i-1]) / 2
             return ha_open
-        
+
         def calc_ha_high(ha_high, ha_open, ha_close):
             for i in range(len(ha_high)):
                 ha_high[i] = max(self.data.High[i], max(ha_open[i], ha_close[i]))
             return ha_high
-        
+
         def calc_ha_low(ha_low, ha_open, ha_close):
             for i in range(len(ha_low)):
                 ha_low[i] = min(self.data.Low[i], min(ha_open[i], ha_close[i]))
             return ha_low
-        
+
         self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
         self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
         self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
-        
+
         # Apply smoothing to Heikin Ashi values
         def smooth_ha_values(values):
             smoothed = np.zeros_like(values)
@@ -86,29 +86,29 @@ class HARSIStrategy(Strategy):
                 start_idx = max(0, i - self.ha_smooth_period + 1)
                 smoothed[i] = np.mean(values[start_idx:i+1])
             return smoothed
-        
+
         self.ha_open = self.I(smooth_ha_values, self.ha_open)
         self.ha_close = self.I(smooth_ha_values, self.ha_close)
         self.ha_high = self.I(smooth_ha_values, self.ha_high)
         self.ha_low = self.I(smooth_ha_values, self.ha_low)
-        
+
         # Calculate scaling factors
         def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
             min_val = min(ha_low[-self.window:])
             max_val = max(ha_high[-self.window:])
             scale = 1.0 / (max_val - min_val) if max_val != min_val else 1
-            
+
             ha_open_scaled = (ha_open - min_val) * scale
             ha_close_scaled = (ha_close - min_val) * scale
             ha_high_scaled = (ha_high - min_val) * scale
             ha_low_scaled = (ha_low - min_val) * scale
-            
+
             return ha_open_scaled, ha_close_scaled, ha_high_scaled, ha_low_scaled
-        
+
         self.ha_open_scaled, self.ha_close_scaled, self.ha_high_scaled, self.ha_low_scaled = self.I(
             calc_scaled_values, self.ha_low, self.ha_high, self.ha_open, self.ha_close
         )
-        
+
         # Calculate RSI and Stochastic RSI
         # Alternative vectorized version (more efficient)
         def calc_rsi(close, period=14):
@@ -117,26 +117,26 @@ class HARSIStrategy(Strategy):
             """
             close = np.array(close, dtype=float)
             delta = np.diff(close)
-            
+
             gain = np.where(delta > 0, delta, 0)
             loss = np.where(delta < 0, -delta, 0)
-            
+
             # Use pandas-style exponential weighted mean if available
             gain_ema = pd.Series(gain).ewm(span=period, adjust=False).mean()
             loss_ema = pd.Series(loss).ewm(span=period, adjust=False).mean()
-            
+
             rs = gain_ema / loss_ema
             rsi_values = 100 - (100 / (1 + rs))
-            
+
             # Pad with NaN for first value and return
             rsi = np.full(len(close), np.nan)
             rsi[1:] = rsi_values
             rsi[:period] = np.nan  # First 'period' values should be NaN
-            
+
             return rsi
-        
+
         rsi = self.I(calc_rsi, self.data.Close.copy())
-        
+
         def calc_stoch_rsi(rsi):
             stoch_rsi = np.zeros_like(rsi)
             for i in range(len(rsi)):
@@ -147,11 +147,11 @@ class HARSIStrategy(Strategy):
                     rsi_max = np.max(rsi[i-self.length_stoch+1:i+1])
                     stoch_rsi[i] = (rsi[i] - rsi_min) / (rsi_max - rsi_min) if rsi_max != rsi_min else 0
             return stoch_rsi
-        
+
         self.stoch_rsi = self.I(calc_stoch_rsi, rsi)
         if self.use_butterworth_filter:
             self.stoch_rsi = self.I(self.butterworth_filter, self.stoch_rsi)
-        
+
         # Calculate K and D lines
         def calc_k(stoch_rsi):
             k = np.zeros_like(stoch_rsi)
@@ -161,7 +161,7 @@ class HARSIStrategy(Strategy):
                 else:
                     k[i] = np.mean(stoch_rsi[i-self.smooth_k+1:i+1])
             return k
-        
+
         def calc_d(k):
             d = np.zeros_like(k)
             for i in range(len(k)):
@@ -170,10 +170,10 @@ class HARSIStrategy(Strategy):
                 else:
                     d[i] = np.mean(k[i-self.smooth_d+1:i+1])
             return d
-        
+
         self.k = self.I(calc_k, self.stoch_rsi)
         self.d = self.I(calc_d, self.k)
-        
+
         # Rescale K and D from [0, 1] to [-40, 40]
         self.k_scaled = self.I(lambda k: k * 80 - 40, self.k)
         self.d_scaled = self.I(lambda d: d * 80 - 40, self.d)
@@ -184,30 +184,30 @@ class HARSIStrategy(Strategy):
         """
         # Need at least 3x the filter order points
         min_length = 3 * self.filter_order
-        
+
         if len(signal) < min_length:
             return signal
-        
+
         # Remove NaN values for filtering
         valid_mask = ~np.isnan(signal)
         if not np.any(valid_mask):
             return signal
-        
+
         valid_signal = signal[valid_mask]
         if len(valid_signal) < min_length:
             return signal
-        
+
         # Design filter
         b, a = butter(self.filter_order, self.filter_cutoff, btype='low')
-        
+
         # Apply filter
         try:
             filtered_valid = filtfilt(b, a, valid_signal)
-            
+
             # Reconstruct full array
             filtered_signal = signal.copy()
             filtered_signal[valid_mask] = filtered_valid
-            
+
             return filtered_signal
         except:
             # If filtering fails, return original signal
@@ -217,17 +217,17 @@ class HARSIStrategy(Strategy):
         # Check if Heikin Ashi candle is green (uptrend) or red (downtrend)
         ha_green = self.ha_close_scaled[-1] > self.ha_open_scaled[-1]
         ha_red = self.ha_close_scaled[-1] < self.ha_open_scaled[-1]
-        
+
         # Check RSI direction
         rsi_rising = self.stoch_rsi[-1] > self.stoch_rsi[-2]
         rsi_falling = self.stoch_rsi[-1] < self.stoch_rsi[-2]
-        
+
         # Entry condition: RSI rising AND Heikin Ashi candle is green
         long_condition = rsi_rising and ha_green
-        
+
         # Exit condition: RSI falling AND Heikin Ashi candle is red
         exit_condition = rsi_falling and ha_red
-        
+
         # Execute trades
         if long_condition and not self.position:
             self.buy()
@@ -248,7 +248,7 @@ class LiveTrader:
         self.last_action = None
         self.last_check_time = None
         self.BUY_PERCENTAGE = 0.5
-        
+
         # Map intervals to minutes for timing calculations
         self.interval_minutes = {
             '1M': 1,
@@ -259,20 +259,13 @@ class LiveTrader:
             '4H': 240,
             '1D': 1440
         }
-        
+
     def setup_driver(self):
         """Initialize the Firefox driver with saved cookies if available"""
         # Create firefox profile directory in the user's home directory
-        firefox_profile_dir = os.path.join(os.path.expanduser('~'), 'pionex_firefox_profile')
-        os.makedirs(firefox_profile_dir, exist_ok=True)
-        
+
         # Add Firefox options for stability
         options = Options()
-        options.profile = firefox_profile_dir
-        options.set_preference("browser.download.folderList", 2)
-        options.set_preference("browser.download.manager.showWhenStarting", False)
-        options.set_preference("browser.download.dir", firefox_profile_dir)
-        options.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/x-gzip")
         options.set_preference("browser.privatebrowsing.autostart", False)
         options.set_preference("dom.webdriver.enabled", False)
         options.set_preference("useAutomationExtension", False)
@@ -280,17 +273,14 @@ class LiveTrader:
         # options.add_argument("--disable-gpu")
         # options.add_argument("--window-size=1920,1080")
 
-        # Set geckodriver path depending on OS
-        if os.name == "nt":
-            gecko_path = "geckodriver.exe"
-        else:
-            gecko_path = "/usr/local/bin/geckodriver"
+        # gecko_path = "geckodriver.exe"
+        gecko_path = "/usr/bin/geckodriver"
 
         try:
             self.driver = webdriver.Firefox(service=Service(gecko_path), options=options)
             self.driver.get("https://www.pionex.us/")
             self.driver.maximize_window()
-            
+
             self.driver.get("https://accounts.pionex.us/en/sign")
             try:
                 qr_canvas = WebDriverWait(self.driver, 15).until(
@@ -311,8 +301,8 @@ class LiveTrader:
                 WebDriverWait(self.driver, 120).until(
                     lambda d: d.current_url != "https://accounts.pionex.us/en/sign"
                 )
-                time.sleep(3)
-                logging.info(f"Login detected.")
+                logging.info(f"Login detected. Waiting 30s for page load")
+                time.sleep(30)
                 # Convert symbol format from API format (XRP_USDT) to URL format (XRP_USD)
                 url_symbol = self.symbol.replace('_USDT', '_USD')
                 self.driver.get(f"https://www.pionex.us/en-US/trade/{url_symbol}/Manual")
@@ -323,13 +313,15 @@ class LiveTrader:
                 mid_y = window_size['height'] // 2
 
                 actions = ActionChains(self.driver)
-                for _ in range(3):
+                time.sleep(3)
+                for _ in range(4):
                     actions.move_by_offset(mid_x, mid_y).click().perform()
                     actions.move_by_offset(-mid_x, -mid_y)  # Reset mouse position to avoid offset stacking
+                time.sleep(3)
             except Exception as e:
                 logging.error(f"Timeout or error waiting for login: {e}")
                 raise Exception("Login was not detected in time. Please try again.")
-            
+
         except Exception as e:
             logging.error(f"Failed to initialize Firefox driver: {str(e)}")
             if self.driver:
@@ -341,7 +333,7 @@ class LiveTrader:
 
     def buy(self):
         logging.info("Placing Buy Order...")
-        
+
         # Get the latest price from the most recent data
         latest_data = self.fetch_live_data()
         if latest_data is not None and not latest_data.empty:
@@ -349,7 +341,7 @@ class LiveTrader:
             logging.info(f"Current {self.symbol} price (from fetched): ${current_price:.4f}")
         else:
             logging.warning("Could not fetch current price")
-        
+
         buy_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Buy']"))
         )
@@ -358,7 +350,7 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
         )
         market_tab.click()
-        
+
         balance_span = WebDriverWait(self.driver, 10).until(
             EC.visibility_of_element_located((
                 By.XPATH, "//span[text()='Available balance:']/following-sibling::span"
@@ -372,20 +364,20 @@ class LiveTrader:
         # Calculate amount
         amount = balance_value * self.BUY_PERCENTAGE
         # amount = 5
-        
+
         input_box = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
         )
         input_box.clear()
         input_box.send_keys(str(amount))
-        
+
         # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
         base_symbol = self.symbol.split('_')[0]
         buy_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Buy {base_symbol}']]"))
         )
         buy_button.click()
-        
+
         # Check for and handle confirmation dialog
         try:
             confirm_button = WebDriverWait(self.driver, 15).until(
@@ -396,12 +388,12 @@ class LiveTrader:
         except:
             logging.info("No confirmation dialog appeared, pressing Enter.")
             self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
-            
+
         logging.info(f"Buy Order Placed: Bought ${amount} of {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
 
     def sell(self):
         logging.info("Placing Sell Order...")
-        
+
         # Get the latest price from the most recent data
         latest_data = self.fetch_live_data()
         if latest_data is not None and not latest_data.empty:
@@ -409,7 +401,7 @@ class LiveTrader:
             logging.info(f"Current {self.symbol} price (from fetched): ${current_price:.4f}")
         else:
             logging.warning("Could not fetch current price")
-            
+
         sell_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Sell']"))
         )
@@ -418,7 +410,7 @@ class LiveTrader:
             EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
         )
         market_tab.click()
-        
+
         # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
         base_symbol = self.symbol.split('_')[0]
         balance_span = WebDriverWait(self.driver, 10).until(
@@ -430,18 +422,18 @@ class LiveTrader:
         balance_text = balance_span.text.strip()
         balance_number = balance_text.replace(base_symbol, "").replace(",", "").strip()
         balance_value = float(balance_number)
-        
+
         input_box = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
         )
         input_box.clear()
         input_box.send_keys(str(balance_value))
-        
+
         sell_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Sell {base_symbol}']]"))
         )
         sell_button.click()
-        
+
         # Check for and handle confirmation dialog
         try:
             confirm_button = WebDriverWait(self.driver, 15).until(
@@ -452,7 +444,7 @@ class LiveTrader:
         except:
             logging.info("No confirmation dialog appeared, pressing Enter.")
             self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
-            
+
         logging.info(f"Sell Order Placed: Sold {balance_value} {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
 
     def fetch_live_data(self):
@@ -502,10 +494,10 @@ class LiveTrader:
             try:
                 # Get current time
                 current_time = datetime.now()
-                
+
                 # Calculate time until next candle open based on interval
                 interval_minutes = self.interval_minutes.get(self.interval, 15)  # Default to 15 if interval not found
-                
+
                 if self.interval == '1H':
                     # For hourly intervals, wait until the start of the next hour
                     minutes_to_next = 60 - current_time.minute
@@ -525,30 +517,30 @@ class LiveTrader:
                 else:
                     # For minute-based intervals (1M, 5M, 15M, 30M)
                     minutes_to_next = interval_minutes - (current_time.minute % interval_minutes)
-                
+
                 seconds_to_next = minutes_to_next * 60 - current_time.second
-                
+
                 if seconds_to_next > 0:
                     logging.info(f"Waiting {seconds_to_next} seconds for next {self.interval} candle open...")
                     time.sleep(seconds_to_next + 2)
-                
+
                 # Fetch latest data
                 data = self.fetch_live_data()
                 if data is None or data.empty:
                     logging.warning("Failed to fetch data, retrying in 5 seconds...")
                     time.sleep(5)
                     continue
-               
+
                 data = data.sort_index()
 
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=False)
                 stats = bt.run()
                 bt.plot(filename='backtest_report.html', open_browser=False)
-                
+
                 # Get the last action from the strategy
                 strat_action = stats['_strategy'].last_action
-                
+
                 # Execute trades if needed
                 if strat_action == "SELL" and self.last_action != "SELL":
                     if first_sell_received:
@@ -566,12 +558,12 @@ class LiveTrader:
                         self.last_action = "BUY"
                     else:
                         logging.info("Buy signal detected, but waiting for the first sell signal before buying.")
-                
+
                 if not first_sell_received:
                     logging.info("Waiting for the first sell signal to activate trading...")
 
                 logging.info(f"Strategy check completed at {current_time}")
-                time.sleep(5)                
+                time.sleep(5)
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}")
                 time.sleep(5)  # Wait 5 seconds before retrying
@@ -586,8 +578,8 @@ if __name__ == "__main__":
     # Available intervals: '1M', '5M', '15M', '30M', '1H', '4H', '1D'
     # Available symbols: 'XRP_USDT', 'BTC_USDT', 'ETH_USDT', 'ADA_USDT', 'DOT_USDT', etc.
     interval = '15M'  # Change this to your desired interval
-    symbol = 'XRP_USDT'  # Change this to your desired trading pair
-    
+    symbol = 'RAY_USDT'  # Change this to your desired trading pair
+
     trader = LiveTrader(interval=interval, symbol=symbol)
     try:
         trader.run()
@@ -595,4 +587,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logging.info("\nShutting down trading bot...")
     finally:
-        trader.cleanup() 
+        trader.cleanup()
