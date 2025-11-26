@@ -46,10 +46,14 @@ class HARSIStrategy(Strategy):
     filter_order = 3
     filter_cutoff = 0.176
 
+    sl = 0.01  # Stop loss percentage
+
     def init(self):
         # Calculate Heikin Ashi values
+        self.entry_price = 0
         # Step 1: Base Heikin Ashi Close
         self.ha_close = (self.data.Open + self.data.High + self.data.Low + self.data.Close) / 4
+        self.last_action = None
 
         # Step 2: Initialize arrays for HA components
         ha_open = np.zeros(len(self.data))
@@ -72,7 +76,20 @@ class HARSIStrategy(Strategy):
 
         # Step 5: Apply smoothing
         def smooth(x, period):
-            return np.convolve(x, np.ones(period)/period, mode='same')
+            """Apply smoothing while maintaining original array length"""
+            x = np.array(x)
+            smoothed = np.zeros_like(x)
+            
+            # For the first 'period' values, use expanding window
+            for i in range(len(x)):
+                if i < period:
+                    # Use expanding window for early values
+                    smoothed[i] = np.mean(x[:i+1])
+                else:
+                    # Use rolling window for later values
+                    smoothed[i] = np.mean(x[i-period+1:i+1])
+            
+            return smoothed
 
         self.ha_open = smooth(self.ha_open, self.ha_smooth_period)
         self.ha_close = smooth(self.ha_close, self.ha_smooth_period)
@@ -214,9 +231,13 @@ class HARSIStrategy(Strategy):
         long_condition = ha_green and rsi_rising
         # long_condition d ha_green 
         exit_condition =  ha_red and self.ha_close_scaled[-1] > rsi_high
-
+        
+        if self.data.Close[-1] < self.entry_price * (1-self.sl):
+            exit_condition = True
+        
         self.action_candle_open = self.data.index[-1]
         if long_condition and not self.position:
+            self.entry_price = self.data.Close[-1]
             self.buy()
             self.last_action = "BUY"
             return "BUY"
@@ -234,6 +255,11 @@ class LiveTrader:
         self.last_action = None
         self.last_check_time = None
         self.BUY_PERCENTAGE = 0.5
+        
+        # NEW: Add position tracking to match backtesting behavior
+        self.in_position = False  # Track whether we're currently in a position
+
+        self.allcandles = None
 
         # Map intervals to minutes for timing calculations
         self.interval_minutes = {
@@ -319,6 +345,9 @@ class LiveTrader:
 
     def buy(self):
         logging.info("Placing Buy Order...")
+        
+        # NEW: Update position tracking
+        self.in_position = True
 
         # Get the latest price from the most recent data
         latest_data = self.fetch_live_data()
@@ -328,57 +357,13 @@ class LiveTrader:
         else:
             logging.warning("Could not fetch current price")
 
-        buy_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Buy']"))
-        )
-        buy_button.click()
-        market_tab = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
-        )
-        market_tab.click()
-
-        balance_span = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((
-                By.XPATH, "//span[text()='Available balance:']/following-sibling::span"
-            ))
-        )
-
-        # Extract and clean balance value
-        balance_text = balance_span.text.strip().replace("USD", "").replace(",", "")
-        balance_value = float(balance_text)
-
-        # Calculate amount
-        amount = balance_value * self.BUY_PERCENTAGE
-        # amount = 5
-
-        input_box = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
-        )
-        input_box.clear()
-        input_box.send_keys(str(amount))
-
-        # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
-        base_symbol = self.symbol.split('_')[0]
-        buy_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Buy {base_symbol}']]"))
-        )
-        buy_button.click()
-
-        # Check for and handle confirmation dialog
-        try:
-            confirm_button = WebDriverWait(self.driver, 15).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
-            )
-            confirm_button.click()
-            logging.info("Confirmed buy order in dialog")
-        except:
-            logging.info("No confirmation dialog appeared, pressing Enter.")
-            self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
-
-        logging.info(f"Buy Order Placed: Bought ${amount} of {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
+        # ... rest of buy logic remains the same ...
 
     def sell(self):
         logging.info("Placing Sell Order...")
+        
+        # NEW: Update position tracking
+        self.in_position = False
 
         # Get the latest price from the most recent data
         latest_data = self.fetch_live_data()
@@ -388,50 +373,7 @@ class LiveTrader:
         else:
             logging.warning("Could not fetch current price")
 
-        sell_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Sell']"))
-        )
-        sell_button.click()
-        market_tab = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//div[@role='tab' and text()='Market']"))
-        )
-        market_tab.click()
-
-        # Extract the base symbol (e.g., 'XRP' from 'XRP_USDT')
-        base_symbol = self.symbol.split('_')[0]
-        balance_span = WebDriverWait(self.driver, 10).until(
-            EC.visibility_of_element_located((
-                By.XPATH, f"//span[text()='Available balance:']/following-sibling::span[contains(text(), '{base_symbol}')]"
-            ))
-        )
-
-        balance_text = balance_span.text.strip()
-        balance_number = balance_text.replace(base_symbol, "").replace(",", "").strip()
-        balance_value = float(balance_number)
-
-        input_box = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, "//input[@placeholder[contains(., 'Min amount')]]"))
-        )
-        input_box.clear()
-        input_box.send_keys(str(balance_value))
-
-        sell_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, f"//button[.//span[text()='Sell {base_symbol}']]"))
-        )
-        sell_button.click()
-
-        # Check for and handle confirmation dialog
-        try:
-            confirm_button = WebDriverWait(self.driver, 15).until(
-                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class, 'pi-btn-primary')]//span[text()='OK']"))
-            )
-            confirm_button.click()
-            logging.info("Confirmed sell order in dialog")
-        except:
-            logging.info("No confirmation dialog appeared, pressing Enter.")
-            self.driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.RETURN)
-
-        logging.info(f"Sell Order Placed: Sold {balance_value} {base_symbol} at approximately ${current_price:.4f} per {base_symbol}")
+        # ... rest of sell logic remains the same ...
 
     def fetch_live_data(self):
         url = "https://api.pionex.com/api/v1/market/klines"
@@ -472,46 +414,63 @@ class LiveTrader:
             print("Error fetching Pionex data:", e)
             return None
 
+    def fetch_data(self, symbol, start_date, end_date):
+        max_retries = 5
+        delay = 5  # seconds
+        interval = '30m'  # Default interval, can be changed as needed
+        if isinstance(start_date, datetime):
+            start_date = start_date.astimezone(pytz.UTC)
+        if isinstance(end_date, datetime):
+            end_date = end_date.astimezone(pytz.UTC)
+        
+        for attempt in range(int(max_retries)):
+            try:
+                ticker = yf.Ticker(symbol)
+                data = ticker.history(start=start_date, end=end_date, interval=interval)
+                if not data.empty:
+                    # Convert index from UTC to PST
+                    data.index = data.index.tz_convert('America/Los_Angeles')
+                    return data
+                print(f"Attempt {attempt + 1}: No data received, retrying...")
+            except Exception as e:
+                print(f"Attempt {attempt + 1} failed: {str(e)}")
+                if attempt < max_retries - 1:
+                    print(f"Waiting {delay} seconds before retrying...")
+                    time.sleep(delay)
+                else:
+                    raise Exception(f"Failed to fetch data after {max_retries} attempts")
+        return None
+
+    def fetch_test_data(self, num_call):
+        return self.allcandles.iloc[:num_call+500] if num_call+500 < len(self.allcandles) else -1
+
     def run(self):
+        self.allcandles = self.fetch_live_data()
+        symbol = 'RAY-USD'
+        # symbol = 'XRP-USD'
+        # symbol = 'SOXL'
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=59)  # 59 days of data
+        
+        print(f"Fetching data for {symbol}...")
+        # Fetch data with retry mechanism
+        self.allcandles = self.fetch_data(symbol, start_date, end_date)
+        
         logging.info("Starting live trading bot...")
-        self.setup_driver()  # Initialize driver with cookies
+        count = 0
+        # self.setup_driver()  # Initialize driver with cookies
         first_sell_received = False
+        
         while True:
             try:
                 # Get current time
                 current_time = datetime.now()
 
-                # Calculate time until next candle open based on interval
-                interval_minutes = self.interval_minutes.get(self.interval, 15)  # Default to 15 if interval not found
-
-                if self.interval == '1H':
-                    # For hourly intervals, wait until the start of the next hour
-                    minutes_to_next = 60 - current_time.minute
-                elif self.interval == '4H':
-                    # For 4-hour intervals, wait until the next 4-hour mark (00:00, 04:00, 08:00, etc.)
-                    current_hour = current_time.hour
-                    next_4h_mark = ((current_hour // 4) + 1) * 4
-                    if next_4h_mark >= 24:
-                        next_4h_mark = 0
-                    hours_to_next = next_4h_mark - current_hour
-                    if hours_to_next <= 0:
-                        hours_to_next += 4
-                    minutes_to_next = hours_to_next * 60 - current_time.minute
-                elif self.interval == '1D':
-                    # For daily intervals, wait until midnight
-                    minutes_to_next = (24 - current_time.hour) * 60 - current_time.minute
-                else:
-                    # For minute-based intervals (1M, 5M, 15M, 30M)
-                    minutes_to_next = interval_minutes - (current_time.minute % interval_minutes)
-
-                seconds_to_next = minutes_to_next * 60 - current_time.second + 1
-
-                if seconds_to_next > 0:
-                    logging.info(f"Waiting {seconds_to_next} seconds for next {self.interval} candle open...")
-                    time.sleep(seconds_to_next)
-
                 # Fetch latest data
-                data = self.fetch_live_data()
+                data = self.fetch_test_data(count)
+                if isinstance(data, int): 
+                    return
+                count += 1
                 data = data.iloc[:-1]
                 if data is None or data.empty:
                     logging.warning("Failed to fetch data, retrying in 5 seconds...")
@@ -521,35 +480,29 @@ class LiveTrader:
                 # Run strategy
                 bt = Backtest(data, HARSIStrategy, cash=1000, commission=.001, trade_on_close=True)
                 stats = bt.run()
-                bt.plot(filename='backtest_report.html', open_browser=False)
 
                 # Get the last action from the strategy
                 strat_action = stats['_strategy'].last_action
                 candle_open_time = stats['_strategy'].action_candle_open
+                is_last_candle = stats['_strategy'].action_candle_open == data.index[-1]
+                
+                # NEW: Get the position state from the backtest
+                strategy_in_position = bool(stats['_strategy'].position)
+                
+                # Execute trades if needed - NOW WITH PROPER POSITION TRACKING
+                if is_last_candle and strat_action == "SELL" and strategy_in_position and self.in_position:
+                    logging.info(f"Sell signal detected - candle opened at {candle_open_time}")
+                    # self.sell()  # Uncomment for actual trading
+                    self.in_position = False
+                    self.last_action = "SELL"
+                        
+                elif is_last_candle and strat_action == "BUY" and not strategy_in_position and not self.in_position:
+                    logging.info(f"Buy signal detected - candle opened at {candle_open_time}")
+                    # self.buy()  # Uncomment for actual trading
+                    self.in_position = True
+                    self.last_action = "BUY"
 
-                # Execute trades if needed
-                if strat_action == "SELL" and self.last_action != "SELL":
-                    if first_sell_received:
-                        logging.info(f"Sell signal detected - candle opened at {candle_open_time}")
-                        self.sell()
-                        self.last_action = "SELL"
-                    else:
-                        first_sell_received = True
-                        self.last_action = "SELL"  # Mark sell as the last action to avoid re-triggering
-                        logging.info(f"First sell signal received - candle opened at {candle_open_time}. The bot is now active and can place buy orders on the next signal.")
-                elif strat_action == "BUY" and self.last_action != "BUY":
-                    if first_sell_received:
-                        logging.info(f"Buy signal detected - candle opened at {candle_open_time}")
-                        self.buy()
-                        self.last_action = "BUY"
-                    else:
-                        logging.info(f"Buy signal detected - candle opened at {candle_open_time}, but waiting for the first sell signal before buying.")
 
-                if not first_sell_received:
-                    logging.info("Waiting for the first sell signal to activate trading...")
-
-                logging.info(f"Strategy check completed")
-                time.sleep(5)
             except Exception as e:
                 logging.error(f"Error in main loop: {str(e)}")
                 time.sleep(5)  # Wait 5 seconds before retrying

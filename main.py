@@ -12,83 +12,74 @@ from scipy.signal import butter, filtfilt
 
 class HARSIStrategy(Strategy):
     # Strategy parameters
-    bottom = -17.98
-    middle_low = -13.76
-    middle_high = 26.82
-    top = 30.14
-    length_rsi = 33
-    length_stoch = 22
-    smooth_k = 15
-    smooth_d = 13
-    max_ha_cross = 34
-    window = 249
-    ha_smooth_period = 1  # New parameter for Heikin Ashi smoothing
+    length_rsi = 31
+    length_stoch = 21
+    smooth_k = 9
+    smooth_d = 10
+    window = 100
+    ha_smooth_period = 25  # New parameter for Heikin Ashi smoothing
+    rsi_oversold = 0.37
+    rsi_overbought = 0.72
 
     use_butterworth_filter = True
     filter_order = 3
-    filter_cutoff = 0.21 
+    filter_cutoff = 0.176
+
+    sl = 0.01
 
     def init(self):
         # Calculate Heikin Ashi values
+        self.entry_price = 0
+        # Step 1: Base Heikin Ashi Close
         self.ha_close = (self.data.Open + self.data.High + self.data.Low + self.data.Close) / 4
-        self.ha_open = self.I(lambda x: x, self.data.Open)  # Initialize with regular open
-        self.ha_high = self.I(lambda x: x, self.data.High)  # Initialize with regular high
-        self.ha_low = self.I(lambda x: x, self.data.Low)    # Initialize with regular low
 
-        # Calculate HA values using indicators
-        def calc_ha_open(ha_open, ha_close):
-            ha_open[0] = self.data.Open[0]
-            for i in range(1, len(ha_open)):
-                ha_open[i] = (ha_open[i-1] + ha_close[i-1]) / 2
-            return ha_open
+        # Step 2: Initialize arrays for HA components
+        ha_open = np.zeros(len(self.data))
+        ha_high = np.zeros(len(self.data))
+        ha_low = np.zeros(len(self.data))
 
-        def calc_ha_high(ha_high, ha_open, ha_close):
-            for i in range(len(ha_high)):
-                ha_high[i] = max(self.data.High[i], max(ha_open[i], ha_close[i]))
-            return ha_high
+        # Step 3: Calculate Heikin Ashi Open
+        ha_open[0] = self.data.Open[0]
+        for i in range(1, len(self.data)):
+            ha_open[i] = (ha_open[i-1] + self.ha_close[i-1]) / 2
 
-        def calc_ha_low(ha_low, ha_open, ha_close):
-            for i in range(len(ha_low)):
-                ha_low[i] = min(self.data.Low[i], min(ha_open[i], ha_close[i]))
-            return ha_low
+        # Step 4: Calculate High and Low
+        for i in range(len(self.data)):
+            ha_high[i] = max(self.data.High[i], ha_open[i], self.ha_close[i])
+            ha_low[i] = min(self.data.Low[i], ha_open[i], self.ha_close[i])
 
-        self.ha_open = self.I(calc_ha_open, self.ha_open, self.ha_close)
-        self.ha_high = self.I(calc_ha_high, self.ha_high, self.ha_open, self.ha_close)
-        self.ha_low = self.I(calc_ha_low, self.ha_low, self.ha_open, self.ha_close)
+        self.ha_open = ha_open
+        self.ha_high = ha_high
+        self.ha_low = ha_low
 
-        # Apply smoothing to Heikin Ashi values
-        def smooth_ha_values(values):
-            smoothed = np.zeros_like(values)
+        # Step 5: Apply smoothing
+        def smooth(x, period):
+            """Causal moving average using pandas"""
+            return pd.Series(x).rolling(window=period, min_periods=1).mean().values
+
+        self.ha_open = smooth(self.ha_open, self.ha_smooth_period)
+        self.ha_close = smooth(self.ha_close, self.ha_smooth_period)
+        self.ha_high = smooth(self.ha_high, self.ha_smooth_period)
+        self.ha_low = smooth(self.ha_low, self.ha_smooth_period)
+
+        # Scaled version as indicators
+        def scale_ha(values, ha_low, ha_high):
+            scaled = np.zeros_like(values)
             for i in range(len(values)):
-                start_idx = max(0, i - self.ha_smooth_period + 1)
-                smoothed[i] = np.mean(values[start_idx:i+1])
-            return smoothed
+                start = max(0, i - self.window + 1)
+                local_min = np.min(ha_low[start:i+1])
+                local_max = np.max(ha_high[start:i+1])
+                scale = 1.0 / (local_max - local_min) if local_max != local_min else 1.0
+                scaled[i] = (values[i] - local_min) * scale
+            return scaled
 
-        self.ha_open = self.I(smooth_ha_values, self.ha_open)
-        self.ha_close = self.I(smooth_ha_values, self.ha_close)
-        self.ha_high = self.I(smooth_ha_values, self.ha_high)
-        self.ha_low = self.I(smooth_ha_values, self.ha_low)
-
-        # Calculate scaling factors
-        def calc_scaled_values(ha_low, ha_high, ha_open, ha_close):
-            min_val = min(ha_low[-self.window:])
-            max_val = max(ha_high[-self.window:])
-            scale = 1.0 / (max_val - min_val) if max_val != min_val else 1
-
-            ha_open_scaled = (ha_open - min_val) * scale
-            ha_close_scaled = (ha_close - min_val) * scale
-            ha_high_scaled = (ha_high - min_val) * scale
-            ha_low_scaled = (ha_low - min_val) * scale
-
-            return ha_open_scaled, ha_close_scaled, ha_high_scaled, ha_low_scaled
-
-        self.ha_open_scaled, self.ha_close_scaled, self.ha_high_scaled, self.ha_low_scaled = self.I(
-            calc_scaled_values, self.ha_low, self.ha_high, self.ha_open, self.ha_close
-        )
-
+        self.ha_open_scaled = self.I(scale_ha, self.ha_open, self.ha_low, self.ha_high)
+        self.ha_close_scaled = self.I(scale_ha, self.ha_close, self.ha_low, self.ha_high)
+        self.ha_high_scaled = self.I(scale_ha, self.ha_high, self.ha_low, self.ha_high)
+        self.ha_low_scaled = self.I(scale_ha, self.ha_low, self.ha_low, self.ha_high)
         # Calculate RSI and Stochastic RSI
         # Alternative vectorized version (more efficient)
-        def calc_rsi(close, period=14):
+        def calc_rsi(close, period=self.length_rsi):
             """
             Vectorized RSI calculation - more efficient for large datasets
             """
@@ -197,10 +188,20 @@ class HARSIStrategy(Strategy):
         rsi_rising = self.stoch_rsi[-1] > self.stoch_rsi[-2]
         rsi_falling = self.stoch_rsi[-1] < self.stoch_rsi[-2]
 
-        long_condition = rsi_rising and ha_green
-        exit_condition = rsi_falling and ha_red
+        if len(self.stoch_rsi) >= 3:
+            rsi_low = min([self.stoch_rsi[-3], self.stoch_rsi[-2], self.stoch_rsi[-1]]) < self.rsi_oversold
+        else:
+            return  # Not enough data yet to proceed
+        rsi_high = self.stoch_rsi[-1] > self.rsi_overbought
+
+        long_condition = ha_green and rsi_rising
+        exit_condition =  ha_red and self.ha_close_scaled[-1] > rsi_high
+
+        if self.data.Close[-1] < self.entry_price * (1-self.sl):
+            exit_condition = True
 
         if long_condition and not self.position:
+            self.entry_price = self.data.Close[-1]
             self.buy(size=0.5)
         elif exit_condition and self.position:
             self.position.close()
@@ -286,14 +287,16 @@ def fetch_from_file():
 
 if __name__ == '__main__':
     # Example usage with yfinance
-    # symbol = 'XRP_USDT'
-    symbol = 'ETH-USD'
+    symbol = 'RAY_USDT'
+    symbol = 'RAY-USD'
+    # symbol = 'XRP-USD'
     # symbol = 'SOXL'
     end_date = datetime.now()
     start_date = end_date - timedelta(days=59)  # 59 days of data
     
     print(f"Fetching data for {symbol}...")
     # Fetch data with retry mechanism
+    # data = fetch_data(symbol, start_date, end_date, "30m").iloc[:-60]
     data = fetch_data(symbol, start_date, end_date, "30m")
     # data = fetch_data_from_pionex(symbol, "30M")
     # data = fetch_from_file()
@@ -301,7 +304,7 @@ if __name__ == '__main__':
     if data is not None and not data.empty:
         print(f"Successfully fetched {len(data)} data points")
         # Run backtest
-        bt = Backtest(data, HARSIStrategy, cash=100000, commission=.001, trade_on_close=True)
+        bt = Backtest(data, HARSIStrategy, cash=100000, commission=.001, finalize_trades=True)
         stats = bt.run()
         print(stats)
         
@@ -310,8 +313,9 @@ if __name__ == '__main__':
 
         # Export trades to CSV
         trades = stats['_trades']
-        csv_filename = f'trades1.csv'
-        trades.to_csv(csv_filename)
+        print(trades.iloc[:, [9, 10]])
+        # csv_filename = f'trades1.csv'
+        # trades.to_csv(csv_filename)
         # print(f"\nExported trades to {csv_filename}")
         
         # bt.plot()
